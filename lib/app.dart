@@ -1,3 +1,4 @@
+import 'package:books_flutter/navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
@@ -23,10 +24,13 @@ class ComicoApp extends StatelessWidget {
 
       // All app routes in one place
       routes: {
+        // No Navigation
         AppRoutes.intro: (context) => const IntroPage(),
         AppRoutes.login: (context) => const LoginScreen(),
         AppRoutes.register: (context) => const RegisterScreen(),
-        AppRoutes.home: (context) => const Home(),
+
+        // Main app with bottom navigation
+        AppRoutes.home: (context) => const Navigation(),
       },
 
       // Custom page transition for all routes
@@ -39,7 +43,7 @@ class ComicoApp extends StatelessWidget {
           case AppRoutes.register:
             return _buildRoute(const RegisterScreen(), settings);
           case AppRoutes.home:
-            return _buildRoute(const Home(), settings);
+            return _buildRoute(const HomeScreen(), settings);
           default:
             return MaterialPageRoute(
               builder: (context) => const IntroPage(),
