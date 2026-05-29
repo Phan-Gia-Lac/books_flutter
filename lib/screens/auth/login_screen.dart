@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
 import '../../AppRoutes.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -29,175 +28,256 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 24),
 
-                // Main Content Container Box
+                // ─── 1. MASTER PARENT CONTAINER (Outer Border + Glow Shadow) ───
                 Container(
-                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor, // Adapts to your theme
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Colors.grey.withOpacity(0.2),
-                      width: 1,
+                      color: Colors.white.withValues(alpha: 0.05), // Whispy outer rim edge
+                      width: 3,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    // boxShadow: [
+                    //   BoxShadow(
+                    //     color: Colors.grey.shade800,
+                    //     spreadRadius: 1,
+                    //     blurRadius: 20,
+                    //   ),
+                    // ],
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Title (Now placed inside the login container first)
-                      Text(
-                        'Welcome back',
-                        style: Theme.of(context).textTheme.displayLarge,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color.fromARGB(255, 0, 0, 0), // Matte slate outline framework
+                        width: 3,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Sign in to your account',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Email field
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(color: AppColors.textPrimary),
-                        decoration: const InputDecoration(
-                          hintText: 'Email address',
-                          prefixIcon: Icon(Icons.mail_outline_rounded),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Password field
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        style: const TextStyle(color: AppColors.textPrimary),
-                        decoration: InputDecoration(
-                          hintText: 'Password',
-                          prefixIcon: const Icon(Icons.lock_outline_rounded),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        
+                        // ─── DIV A: THE METALLIC HEADER BAR (No Title) ───
+                        Container(
+                          height: 58, 
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(9),
+                              topRight: Radius.circular(9),
                             ),
-                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                          ),
-                        ),
-                      ),
-
-                      // Forgot password (login only)
-                      if (_isLogin) ...[
-                        const SizedBox(height: 4),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {},
-                            child: const Text(
-                              'Forgot password?',
-                              style: TextStyle(
-                                color: AppColors.accent,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
+                            // Real HoYoVerse Header Texture Color Matrix
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Color.fromARGB(255, 18, 18, 18), // Top highlight edge
+                                Color.fromARGB(255, 18, 19, 20), // Main dark slate bar
+                                Color(0xFF121314), // Shadows into the seam line
+                              ],
+                              stops: [0.0, 0.5, 1.0],
                             ),
                           ),
-                        ),
-                      ] else ...[
-                        const SizedBox(height: 16),
-                      ],
-
-                      // Submit button
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushReplacementNamed(context, AppRoutes.home);
-                        },
-                        child: const Text('Sign In'),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Divider
-                      const Row(
-                        children: [
-                          Expanded(child: Divider()),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Text('or'),
-                          ),
-                          Expanded(child: Divider()),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Google button
-                      OutlinedButton(
-                        onPressed: () {
-                          Navigator.pushReplacementNamed(context, AppRoutes.home);
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 20,
-                              height: 20,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  'G',
+                          // ShaderMask keeps the action icons glowing with metallic gradients
+                          child: ShaderMask(
+                            blendMode: BlendMode.srcIn,
+                            shaderCallback: (bounds) => const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0xFFE2E8F0), // Cool platinum silver reflection
+                                Color(0xFF94A3B8), // Soft chrome shadows
+                                Color(0xFFCBD5E1),
+                              ],
+                            ).createShader(bounds),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'LOGIN',
                                   style: TextStyle(
-                                    color: Color(0xFF4285F4),
-                                    fontSize: 13,
+                                    fontFamily: 'authfont',
+                                    fontSize: 30,
                                     fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.5,
+                                    color: Colors.white,
+                                  )
+                                )
+                              ]
+                            )
+                          ),
+                        ),
+
+                        // ─── DIV B: THE FORM CONTENT CONTAINER ───
+                        Container(
+                          color: const Color(0xFF151617), // Rich, clean premium matte black container base
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: 8),
+
+                              // Email field
+                              TextFormField(
+                                controller: _emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  hintText: 'Nhập địa chỉ mail/Tên người dùng',
+                                  hintStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
+                                  prefixIcon: Icon(Icons.mail_outline_rounded, color: Colors.grey[500]),
+                                  filled: true,
+                                  fillColor: Colors.black.withOpacity(0.25), // Sunken field matrix look
+                                  enabledBorder: const OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(30.0)),
+                                    borderSide: BorderSide(
+                                      color: Color(0xFF2E3135), // Smooth custom charcoal wire frame
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  focusedBorder: const OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(30.0)),
+                                    borderSide: BorderSide(
+                                      color: Colors.white38,
+                                      width: 1.5,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Text('Continue with Google'),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                              const SizedBox(height: 16),
 
-                const SizedBox(height: 32),
+                              // Password field
+                              TextFormField(
+                                controller: _passwordController,
+                                obscureText: _obscurePassword,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  hintText: 'Nhập mật khẩu',
+                                  hintStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
+                                  prefixIcon: Icon(Icons.lock_outline_rounded, color: Colors.grey[500]),
+                                  filled: true,
+                                  fillColor: Colors.black.withOpacity(0.25),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
+                                      color: Colors.grey[500],
+                                    ),
+                                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                  ),
+                                  enabledBorder: const OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(30.0)),
+                                    borderSide: BorderSide(
+                                      color: Color(0xFF2E3135),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  focusedBorder: const OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(30.0)),
+                                    borderSide: BorderSide(
+                                      color: Colors.white38,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
 
-                // Toggle login/register - Kept outside the box
-                GestureDetector(
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.register),
-                  child: RichText(
-                    text: TextSpan(
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                      ),
-                      children: [
-                        TextSpan(text: "Don't have an account? "),
-                        TextSpan(
-                          text: 'Register',
-                          style: TextStyle(
-                            color: AppColors.accent,
-                            fontWeight: FontWeight.w600,
+                              // Clear Actions Row (Đăng ký ngay & Quên mật khẩu)
+                              if (_isLogin) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pushReplacementNamed(context, AppRoutes.register);
+                                      },
+                                      child: const Text(
+                                        'Đăng ký ngay',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {},
+                                      child: const Text(
+                                        'Quên mật khẩu',
+                                        style: TextStyle(
+                                          color: Colors.white60,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ] else ...[
+                                const SizedBox(height: 16),
+                              ],
+
+                              const SizedBox(height: 12),
+
+                              // Submit button (Vào Button)
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF1A1C1E),
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  side: const BorderSide(color: Color(0xFF3A3F44), width: 1),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                ),
+                                onPressed: () {
+                                  Navigator.pushReplacementNamed(context, AppRoutes.home);
+                                },
+                                child: const Text(
+                                  'Sign In',
+                                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, letterSpacing: 1),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Divider Lines
+                              Row(
+                                children: [
+                                  Expanded(child: Divider(color: Colors.white.withOpacity(0.08))),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    child: Text('hoặc', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                                  ),
+                                  Expanded(child: Divider(color: Colors.white.withOpacity(0.08))),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Authentic Social Layout Icons Strip
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildSocialCircle(Icons.discord, const Color(0xFF5865F2)),
+                                  const SizedBox(width: 16),
+                                  _buildSocialCircle(Icons.facebook, const Color(0xFF1877F2)),
+                                  const SizedBox(width: 16),
+                                  _buildSocialCircle(Icons.close, Colors.black), // Standard generic X replacement symbol
+                                  const SizedBox(width: 16),
+                                  _buildSocialCircle(Icons.g_mobiledata_rounded, const Color(0xFFEA4335), isGoogle: true),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
-                      ],
+
+                      ], 
                     ),
                   ),
                 ),
@@ -205,6 +285,25 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  // Quick structural builder for the circle social media nodes at the card footer base
+  Widget _buildSocialCircle(IconData icon, Color bg, {bool isGoogle = false}) {
+    return Container(
+      width: 42,
+      height: 42,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+      ),
+      child: Center(
+        child: Icon(
+          icon,
+          color: bg,
+          size: isGoogle ? 32 : 24,
         ),
       ),
     );
