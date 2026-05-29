@@ -63,6 +63,13 @@ flutter:
   # assets:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
+
+  fonts:
+    - family: authfont
+      fonts:
+        - asset: assets\fonts\印品鸿蒙体.ttf
+
+  
   assets:
     - assets/animations/new_intro.riv
 
