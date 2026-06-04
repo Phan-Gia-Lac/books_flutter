@@ -1,5 +1,7 @@
 import 'package:books_flutter/navigation_bar.dart';
+import 'package:books_flutter/viewmodel/productsVM.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
@@ -12,7 +14,9 @@ class ComicoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return ChangeNotifierProvider(
+      create: (_) => ProductsVM(),
+      child: MaterialApp(
       title: 'COMICO STORE',
       debugShowCheckedModeBanner: false,
 
@@ -50,6 +54,7 @@ class ComicoApp extends StatelessWidget {
             );
         }
       },
+    ),
     );
   }
 
