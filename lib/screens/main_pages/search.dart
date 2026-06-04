@@ -230,26 +230,23 @@ class _SearchScreenState extends State<SearchScreen> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.accent
-                        : AppColors.surface,
+                    color: ProfileColors.lime,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isSelected
-                          ? AppColors.accent
-                          : AppColors.inputBorder,
+                          ? ProfileColors.limeDim
+                          : ProfileColors.lime,
+                      width: isSelected ? 2 : 1,
                     ),
                   ),
                   child: Text(
                     genre,
                     style: TextStyle(
-                      color: isSelected
-                          ? Colors.white
-                          : AppColors.textSecondary,
+                      color: AppColors.black,
                       fontSize: 13,
                       fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w400,
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                     ),
                   ),
                 ),

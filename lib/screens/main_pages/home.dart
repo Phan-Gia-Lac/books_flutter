@@ -1,40 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../models/data_model.dart';
+import '../controllers/book_detail.dart';
 
-// Temporary book model for placeholder data
-class Book {
-  final String title;
-  final String author;
-  final double rating;
-  final double price;
-  final Color coverColor; // placeholder color instead of real image
 
-  const Book({
-    required this.title,
-    required this.author,
-    required this.rating,
-    required this.price,
-    required this.coverColor,
-  });
-}
-
-// Placeholder data
-final List<Book> _featuredBooks = [
-  Book(title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', rating: 4.5, price: 12.99, coverColor: const Color(0xFF6C63FF)),
-  Book(title: 'To Kill a Mockingbird', author: 'Harper Lee', rating: 4.8, price: 10.99, coverColor: const Color(0xFF2196F3)),
-  Book(title: '1984', author: 'George Orwell', rating: 4.7, price: 9.99, coverColor: const Color(0xFFE91E63)),
-  Book(title: 'Dune', author: 'Frank Herbert', rating: 4.6, price: 14.99, coverColor: const Color(0xFFFF9800)),
-];
-
-final List<Book> _popularBooks = [
-  Book(title: 'Harry Potter', author: 'J.K. Rowling', rating: 4.9, price: 15.99, coverColor: const Color(0xFF9C27B0)),
-  Book(title: 'The Hobbit', author: 'J.R.R. Tolkien', rating: 4.7, price: 11.99, coverColor: const Color(0xFF4CAF50)),
-  Book(title: 'Sherlock Holmes', author: 'Arthur Conan Doyle', rating: 4.5, price: 8.99, coverColor: const Color(0xFF795548)),
-  Book(title: 'The Alchemist', author: 'Paulo Coelho', rating: 4.6, price: 10.99, coverColor: const Color(0xFF009688)),
-  Book(title: 'Brave New World', author: 'Aldous Huxley', rating: 4.3, price: 9.99, coverColor: const Color(0xFFF44336)),
-  Book(title: 'Fahrenheit 451', author: 'Ray Bradbury', rating: 4.4, price: 8.99, coverColor: const Color(0xFF3F51B5)),
-];
-
+// ── HomeScreen ───────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -43,9 +13,18 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+
+  void _navigateToDetail(BuildContext context, Book book) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => BookDetailScreen(book: book)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: ProfileColors.background,
       appBar: _buildAppBar(),
       body: SingleChildScrollView(
         child: Column(
@@ -67,16 +46,17 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── AppBar ──
+  // ── AppBar ──────────────────────────────────────────────────────────────────
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: AppColors.background,
+      backgroundColor: ProfileColors.background,
       elevation: 0,
       automaticallyImplyLeading: false,
+      centerTitle: true,
       title: const Text(
-        'COMICO STORE',
+        'COMICO',
         style: TextStyle(
-          color: AppColors.textPrimary,
+          color: AppColors.white,
           fontSize: 18,
           fontWeight: FontWeight.w700,
           letterSpacing: 1,
@@ -84,11 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.search_rounded, color: AppColors.textPrimary),
-          onPressed: () {},
-        ),
-        IconButton(
-          icon: const Icon(Icons.shopping_cart_outlined, color: AppColors.textPrimary),
+          icon: const Icon(Icons.shopping_cart_outlined, color: AppColors.white),
           onPressed: () {},
         ),
         const SizedBox(width: 8),
@@ -96,11 +72,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Banner ──
+  // ── Banner ──────────────────────────────────────────────────────────────────
   Widget _buildBanner() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       height: 180,
+      width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: const LinearGradient(
@@ -197,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Section Header ──
+  // ── Section Header ──────────────────────────────────────────────────────────
   Widget _buildSectionHeader(String title, {required VoidCallback onSeeAll}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -207,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             title,
             style: const TextStyle(
-              color: AppColors.textPrimary,
+              color: AppColors.white,
               fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
@@ -217,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Text(
               'See all',
               style: TextStyle(
-                color: AppColors.accent,
+                color: ProfileColors.lime,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -228,16 +205,22 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Featured Books horizontal scroll ──
+  // ── Featured Books – horizontal scroll ─────────────────────────────────────
   Widget _buildFeaturedBooks() {
     return SizedBox(
       height: 220,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: _featuredBooks.length,
+        itemCount: featuredBooks.length,
         itemBuilder: (context, index) {
-          return _buildFeaturedCard(_featuredBooks[index]);
+          final book = featuredBooks[index];
+          // FIX: wrap in GestureDetector so tapping navigates to detail
+          return GestureDetector(
+            onTap: () => _navigateToDetail(context, book),
+            child: _buildFeaturedCard(book),
+          );
         },
       ),
     );
@@ -308,13 +291,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Popular Books grid ──
+  // ── Popular Books – grid ────────────────────────────────────────────────────
   Widget _buildPopularGrid() {
     return GridView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: _popularBooks.length,
+      itemCount: popularBooks.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 16,
@@ -322,7 +305,12 @@ class _HomeScreenState extends State<HomeScreen> {
         childAspectRatio: 0.72,
       ),
       itemBuilder: (context, index) {
-        return _buildPopularCard(_popularBooks[index]);
+        final book = popularBooks[index];
+        // FIX: wrap in GestureDetector so tapping navigates to detail
+        return GestureDetector(
+          onTap: () => _navigateToDetail(context, book),
+          child: _buildPopularCard(book),
+        );
       },
     );
   }
@@ -330,29 +318,35 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildPopularCard(Book book) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: ProfileColors.surface,
         borderRadius: BorderRadius.circular(12),
+        // FIX: use a subtle border color instead of solid white
+        border: Border.all(color: Colors.white12, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Book cover
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: book.coverColor,
+                color: ProfileColors.surfaceRaised,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
+                  top: Radius.circular(11),
                 ),
               ),
-              child: const Center(
-                child: Icon(Icons.book_rounded, color: Colors.white54, size: 36),
+              child: Center(
+                child: Icon(
+                  Icons.book_rounded,
+                  color: book.coverColor.withOpacity(0.85),
+                  size: 36,
+                ),
               ),
             ),
           ),
-
-          // Info
-          Padding(
+          Container(
+            width: double.infinity,
+            // FIX: use ProfileColors.surface so it blends with the card background
+            color: ProfileColors.surface,
             padding: const EdgeInsets.all(10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,7 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   book.title,
                   style: const TextStyle(
-                    color: AppColors.textPrimary,
+                    color: AppColors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -378,7 +372,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           book.rating.toString(),
                           style: const TextStyle(
-                            color: AppColors.textSecondary,
+                            color: AppColors.white,
                             fontSize: 11,
                           ),
                         ),
@@ -386,8 +380,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     Text(
                       '\$${book.price}',
-                      style: TextStyle(
-                        color: AppColors.accent,
+                      style: const TextStyle(
+                        color: AppColors.white,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
@@ -402,3 +396,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
