@@ -29,6 +29,30 @@ class AppColors {
   static const black = Color(0xFF000000);
 }
 
+/// Retro monochrome palette — grey/black base, lime accent (profile screens).
+class ProfileColors {
+  static const background = Color(0xFF0E0E0F);
+  static const surface = Color(0xFF151617);
+  static const surfaceRaised = Color(0xFF1C1E21);
+  static const borderOuter = Color(0xFF2A2D31);
+  static const borderInner = Color(0xFF0A0A0B);
+  static const wireFrame = Color(0xFF2E3135);
+  static const textPrimary = Color(0xFFB8B8BA);
+  static const textSecondary = Color(0xFF6E6E73);
+  static const textMuted = Color(0xFF48484A);
+  static const lime = Color(0xFFC6FF00);
+  static const limeDim = Color(0xFF8FB300);
+  static const signOutIcon = Color(0xFF5C5C5E);
+  static const inputFill = Color(0x59000000);
+  static const headerGradientTop = Color(0xFF1A1A1B);
+  static const headerGradientMid = Color(0xFF141516);
+  static const headerGradientBottom = Color(0xFF101112);
+  static const saveGradientStart = Color(0xFFD4FF33);
+  static const saveGradientMid = Color(0xFFC6FF00);
+  static const saveGradientEnd = Color(0xFF9ECC00);
+  static const saveButtonText = Color(0xFF1A1A1A);
+}
+
 class AppTheme {
   static ThemeData get dark => ThemeData(
         brightness: Brightness.dark,
