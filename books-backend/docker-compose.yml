@@ -1,0 +1,16 @@
+services:
+  postgres_db:
+    image: postgres:15-alpine # Dùng bản alpine cho nhẹ
+    container_name: comic_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-123456}
+      POSTGRES_DB: ${DB_NAME:-comic_shop}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data # Lưu trữ data để không bị mất khi tắt container
+
+volumes:
+  pgdata:

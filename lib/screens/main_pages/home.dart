@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import '../../models/data_model.dart';
+import '../../viewmodel/productsVM.dart';
 import '../controllers/book_detail.dart';
 
 
@@ -14,6 +16,15 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
 
+  @override
+  void initState() {
+    super.initState();
+    // Fetch books from backend on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ProductsVM>(context, listen: false).fetchBooks();
+    });
+  }
+
   void _navigateToDetail(BuildContext context, Book book) {
     Navigator.push(
       context,
@@ -26,22 +37,46 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: ProfileColors.background,
       appBar: _buildAppBar(),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildBanner(),
-            const SizedBox(height: 28),
-            _buildSectionHeader('Featured', onSeeAll: () {}),
-            const SizedBox(height: 16),
-            _buildFeaturedBooks(),
-            const SizedBox(height: 28),
-            _buildSectionHeader('Popular', onSeeAll: () {}),
-            const SizedBox(height: 16),
-            _buildPopularGrid(),
-            const SizedBox(height: 32),
-          ],
-        ),
+      body: Consumer<ProductsVM>(
+        builder: (context, vm, child) {
+          if (vm.isLoading) {
+            return const Center(child: CircularProgressIndicator(color: AppColors.accent));
+          }
+
+          if (vm.error != null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Lỗi: ${vm.error}', style: const TextStyle(color: Colors.white)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => vm.fetchBooks(),
+                    child: const Text('Thử lại'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildBanner(),
+                const SizedBox(height: 28),
+                _buildSectionHeader('Featured', onSeeAll: () {}),
+                const SizedBox(height: 16),
+                _buildFeaturedBooks(vm.featuredBooks),
+                const SizedBox(height: 28),
+                _buildSectionHeader('Popular', onSeeAll: () {}),
+                const SizedBox(height: 16),
+                _buildPopularGrid(vm.popularBooks),
+                const SizedBox(height: 32),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -206,16 +241,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ── Featured Books – horizontal scroll ─────────────────────────────────────
-  Widget _buildFeaturedBooks() {
+  Widget _buildFeaturedBooks(List<Book> books) {
+    if (books.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Text('Không có truyện nổi bật', style: TextStyle(color: Colors.white70)),
+      );
+    }
     return SizedBox(
       height: 220,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: featuredBooks.length,
+        itemCount: books.length,
         itemBuilder: (context, index) {
-          final book = featuredBooks[index];
+          final book = books[index];
           // FIX: wrap in GestureDetector so tapping navigates to detail
           return GestureDetector(
             onTap: () => _navigateToDetail(context, book),
@@ -292,12 +333,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ── Popular Books – grid ────────────────────────────────────────────────────
-  Widget _buildPopularGrid() {
+  Widget _buildPopularGrid(List<Book> books) {
+    if (books.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Text('Không có truyện phổ biến', style: TextStyle(color: Colors.white70)),
+      );
+    }
     return GridView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: popularBooks.length,
+      itemCount: books.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 16,
@@ -305,7 +352,7 @@ class _HomeScreenState extends State<HomeScreen> {
         childAspectRatio: 0.72,
       ),
       itemBuilder: (context, index) {
-        final book = popularBooks[index];
+        final book = books[index];
         // FIX: wrap in GestureDetector so tapping navigates to detail
         return GestureDetector(
           onTap: () => _navigateToDetail(context, book),

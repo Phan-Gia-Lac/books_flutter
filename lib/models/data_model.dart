@@ -2,19 +2,38 @@ import 'package:flutter/material.dart';
 
 // Book model class
 class Book {
+  final int? id;
   final String title;
   final String author;
+  final String? description;
   final double rating;
   final double price;
   final Color coverColor;
+  final String? coverImage;
 
   const Book({
+    this.id,
     required this.title,
     required this.author,
+    this.description,
     required this.rating,
     required this.price,
     required this.coverColor,
+    this.coverImage,
   });
+
+  factory Book.fromJson(Map<String, dynamic> json) {
+    return Book(
+      id: json['id'],
+      title: json['title'] ?? 'Unknown Title',
+      author: json['author'] ?? 'Unknown Author',
+      description: json['description'],
+      rating: (json['rating'] ?? 0.0).toDouble(),
+      price: (json['price'] ?? 0.0).toDouble(),
+      coverColor: const Color(0xFF6C63FF), // Default color for now
+      coverImage: json['cover_image'],
+    );
+  }
 }
 
 // Sameple data for books
