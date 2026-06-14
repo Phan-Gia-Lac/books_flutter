@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../AppRoutes.dart';
+import '../../viewmodel/authVM.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,9 +13,32 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   final bool _isLogin = true;
+  String? _validationError;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() => _validationError = 'Email and password are required.');
+      return;
+    }
+
+    setState(() => _validationError = null);
+
+    final auth = context.read<AuthVM>();
+    auth.clearError();
+
+    final success = await auth.login(email, password);
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    }
+  }
 
   @override
   void dispose() {
@@ -227,23 +252,55 @@ class _LoginScreenState extends State<LoginScreen> {
 
                               const SizedBox(height: 12),
 
-                              // Submit button (Vào Button)
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1A1C1E),
-                                  foregroundColor: Colors.white,
-                                  elevation: 0,
-                                  side: const BorderSide(color: Color(0xFF3A3F44), width: 1),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                ),
-                                onPressed: () {
-                                  Navigator.pushReplacementNamed(context, AppRoutes.home);
+                              Consumer<AuthVM>(
+                                builder: (context, auth, _) {
+                                  final error = _validationError ?? auth.error;
+                                  if (error == null) return const SizedBox.shrink();
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: Text(
+                                      error,
+                                      style: const TextStyle(
+                                        color: Color(0xFFFF6B6B),
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  );
                                 },
-                                child: const Text(
-                                  'Sign In',
-                                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, letterSpacing: 1),
-                                ),
+                              ),
+
+                              // Submit button (Vào Button)
+                              Consumer<AuthVM>(
+                                builder: (context, auth, _) {
+                                  return ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF1A1C1E),
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      side: const BorderSide(color: Color(0xFF3A3F44), width: 1),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                    ),
+                                    onPressed: auth.isLoading ? null : _handleLogin,
+                                    child: auth.isLoading
+                                        ? const SizedBox(
+                                            height: 22,
+                                            width: 22,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : const Text(
+                                            'Sign In',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 16,
+                                              letterSpacing: 1,
+                                            ),
+                                          ),
+                                  );
+                                },
                               ),
                               const SizedBox(height: 24),
 
