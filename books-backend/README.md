@@ -1,0 +1,1 @@
+Just run "docker compose up" then everything will run inside docker via entrypoint
