@@ -1,6 +1,6 @@
 services:
   postgres_db:
-    image: postgres:15-alpine # Dùng bản alpine cho nhẹ
+    image: postgres:15-alpine
     container_name: comic_postgres
     restart: always
     environment:
@@ -10,7 +10,56 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data # Lưu trữ data để không bị mất khi tắt container
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-comic_shop}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build: .
+    container_name: comic_api
+    restart: always
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      DB_HOST: postgres_db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-123456}
+      DB_NAME: ${DB_NAME:-comic_shop}
+      PORT: 3000
+      NODE_ENV: development
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    develop:
+      watch:
+        - path: ./db
+          action: sync
+          target: /app/db
+          ignore:
+            - ./db/seeds/ # Ignore seeds from regular sync so they don't double-trigger
+            - ./db/migrations/
+
+
+        # This is for migrations changes
+        - path: .db/migrations
+          action: sync+restart
+          target: /app/db/migrations
+
+        # This is for seed changes
+        - path: .db/seeds
+          action: sync+restart
+          target: /app/db/seeds
+
+        # This is for docker entrypoint changes
+        - path: ./docker-entrypoint.sh
+          action: sync+restart
+          target: /app/docker-entrypoint.sh
+
 
 volumes:
   pgdata:

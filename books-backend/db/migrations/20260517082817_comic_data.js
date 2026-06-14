@@ -22,6 +22,7 @@ exports.up = function (knex) {
             table.timestamps(true, true);
         })
         .createTable('users', (table) => {
+            //For better performance use increment //If we going for security, we should use UUID
             table.increments('id').primary();
             table.string('full_name', 100).notNullable();
             table.string('email', 100).notNullable().unique();
