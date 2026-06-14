@@ -20,10 +20,19 @@ app.use((req, res, next) => {
     next();
 });
 
-// 3. Mount Routes
+// 3. API root health check
+app.get('/api', (req, res) => {
+    res.json({
+        success: true,
+        message: 'Comic API is running',
+        availableRoutes: ['/api/auth', '/api/comics', '/api/orders', '/api/users']
+    });
+});
+
+// 4. Mount Routes
 app.use('/api', routes);
 
-// 4. Fallback route for 404
+// 5. Fallback route for 404
 app.use((req, res, next) => {
     const error = new Error('Đường dẫn không tồn tại');
     error.statusCode = 404;
