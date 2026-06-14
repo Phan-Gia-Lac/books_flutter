@@ -1,4 +1,5 @@
 import 'package:books_flutter/navigation_bar.dart';
+import 'package:books_flutter/viewmodel/authVM.dart';
 import 'package:books_flutter/viewmodel/productsVM.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,8 +15,11 @@ class ComicoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ProductsVM(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthVM()),
+        ChangeNotifierProvider(create: (_) => ProductsVM()),
+      ],
       child: MaterialApp(
       title: 'COMICO STORE',
       debugShowCheckedModeBanner: false,
