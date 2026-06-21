@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../AppRoutes.dart';
 import '../../viewmodel/authVM.dart';
+import 'package:books_flutter/theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +18,41 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  void forgotPassword(BuildContext context) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar( // Added the missing SnackBar widget wrapper
+      animation: CurvedAnimation(
+        parent: AnimationController(
+          duration: const Duration(milliseconds: 1000),
+          reverseDuration: const Duration(microseconds: 1000),
+          vsync: Navigator.of(context),
+        )..forward(),
+        curve: Curves.easeIn,
+      ),
+      duration: const Duration(seconds: 2),
+      content: const Text(
+        'No forget password service yet, sorry', // Updated message
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+      backgroundColor: ProfileColors.surfaceRaised,
+      behavior: SnackBarBehavior.floating,
+      dismissDirection: DismissDirection.horizontal,
+      margin: const EdgeInsets.only(
+        bottom: 808 - 140,
+        left: 16,
+        right: 16,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: const BorderSide(color: ProfileColors.limeDim, width: 1),
+      ),
+    ),
+  );
+}
 
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
@@ -97,7 +133,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               topLeft: Radius.circular(9),
                               topRight: Radius.circular(9),
                             ),
-                            // Real HoYoVerse Header Texture Color Matrix
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
@@ -154,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 keyboardType: TextInputType.emailAddress,
                                 style: const TextStyle(color: Colors.white),
                                 decoration: InputDecoration(
-                                  hintText: 'Nhập địa chỉ mail/Tên người dùng',
+                                  hintText: 'Nhập địa chỉ mail',
                                   hintStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
                                   prefixIcon: Icon(Icons.mail_outline_rounded, color: Colors.grey[500]),
                                   filled: true,
@@ -234,7 +269,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                     ),
                                     TextButton(
-                                      onPressed: () {},
+                                      onPressed: () => forgotPassword(context),
                                       child: const Text(
                                         'Quên mật khẩu',
                                         style: TextStyle(
@@ -321,15 +356,16 @@ class _LoginScreenState extends State<LoginScreen> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  _buildSocialCircle(Icons.discord, const Color(0xFF5865F2)),
-                                  const SizedBox(width: 16),
-                                  _buildSocialCircle(Icons.facebook, const Color(0xFF1877F2)),
-                                  const SizedBox(width: 16),
-                                  _buildSocialCircle(Icons.close, Colors.black), // Standard generic X replacement symbol
-                                  const SizedBox(width: 16),
-                                  _buildSocialCircle(Icons.g_mobiledata_rounded, const Color(0xFFEA4335), isGoogle: true),
+                                  Text(
+                                    'No OAUTH service yet unfortunately',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16
+                                    )
+                                  )
                                 ],
-                              ),
+                              )
                             ],
                           ),
                         ),

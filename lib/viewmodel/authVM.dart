@@ -34,7 +34,7 @@ class AuthVM extends ChangeNotifier {
     } on ApiException catch (e) {
       _error = e.message;
       return false;
-    } catch (_) {
+    } catch (e, stack) {
       _error = 'Could not connect to server. Check that the backend is running.';
       return false;
     } finally {
@@ -43,10 +43,34 @@ class AuthVM extends ChangeNotifier {
     }
   }
 
+  Future<bool> register(String fullName, String email, String password) async {
+    try {
+      final result = await _api.register(fullName: fullName, email: email, password: password);
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      return false;
+    }
+  }
+
   void logout() {
     _user = null;
     _accessToken = null;
     _error = null;
     notifyListeners();
+  }
+
+  Future<bool> updateProfile({
+    required String fullName,
+    // String password,
+    required String phoneNumber
+  }) async {
+    try {
+      final updatedUser = await _api.updateProfile(fullName: fullName, token: _accessToken ?? '', phone_number: phoneNumber);
+      _user = updatedUser;
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

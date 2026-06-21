@@ -1,6 +1,15 @@
 import 'package:books_flutter/AppRoutes.dart';
 import 'package:books_flutter/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:books_flutter/viewmodel/authVM.dart';
+import 'package:http/http.dart';
+import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+// Fix user info by calling api
+// Save changes has to change the information of that exact user
+// add 2 step factor for changing email?
+
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -10,35 +19,88 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final _nameController = TextEditingController(text: 'Alex Reader');
-  final _usernameController = TextEditingController(text: '@alex_reads');
-  final _emailController = TextEditingController(text: 'alex@books.app');
-  final _bioController = TextEditingController(
-    text: 'Collector of paperbacks and late-night chapters.',
-  );
+
+  late final TextEditingController _nameController;
+  late final TextEditingController _emailController;
+  // late final TextEditingController _passwordController;
+  late final TextEditingController _phonenumberController;
+  late final TextEditingController _bioController;
 
   @override
   void dispose() {
     _nameController.dispose();
-    _usernameController.dispose();
     _emailController.dispose();
+    // _passwordController.dispose();
+    _phonenumberController.dispose();
     _bioController.dispose();
     super.dispose();
   }
+  void initState() {
+    super.initState();
 
-  void _onSaveChanges() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Changes saved'),
-        backgroundColor: ProfileColors.surfaceRaised,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: const BorderSide(color: ProfileColors.limeDim, width: 1),
+    final authVM = Provider.of<AuthVM>(context, listen: false);
+    final currentUser = authVM.user;
+
+    _nameController = TextEditingController(text: currentUser?.fullName ?? '');
+    _emailController = TextEditingController(text: currentUser?.email ?? '');
+    // _passwordController = TextEditingController(text: currentUser?.password ?? '');
+    _phonenumberController = TextEditingController(text: currentUser?.phoneNumber ?? '');
+    _bioController = TextEditingController(text: 'Hello');
+  }
+
+  Future<bool> ValidationCheck() async {
+    if (_nameController.text.trim().isEmpty || _phonenumberController.text.trim().isEmpty) {
+      return false;
+    }
+    return true;
+  }
+
+
+  void _onSaveChanges() async {
+  // 1. Run your validation checks first
+  final bool check = await ValidationCheck();
+  if (!check) return; // Exit early if validation fails
+
+  // 2. Get the AuthVM instance
+  final authVM = Provider.of<AuthVM>(context, listen: false);
+
+  // 3. Call the updateProfile method with data from your controllers
+  final bool success = await authVM.updateProfile(
+    fullName: _nameController.text.trim(),
+    phoneNumber: _phonenumberController.text.trim()
+  );
+
+  // 4. Check if the widget is still in the tree before showing UI elements
+  if (!mounted) return;
+
+  // 5. Show a SnackBar reflecting the real backend result
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        success ? 'Changes saved' : (authVM.error ?? 'Failed to save changes'),
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
         ),
       ),
-    );
-  }
+      backgroundColor: success ? ProfileColors.surfaceRaised : Colors.redAccent,
+      behavior: SnackBarBehavior.floating,
+      dismissDirection: DismissDirection.horizontal,
+      margin: const EdgeInsets.only(
+        bottom: 808 - 140,
+        left: 16,
+        right: 16,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: success ? ProfileColors.limeDim : Colors.red, 
+          width: 1,
+        ),
+      ),
+    ),
+  );
+}
 
   void _onSignOut() {
     showDialog<void>(
@@ -72,6 +134,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
+              context.read<AuthVM>().logout();
               Navigator.pushNamedAndRemoveUntil(
                 context,
                 AppRoutes.login,
@@ -134,7 +197,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _RetroFrame(
-                child: _AvatarSection(onChangePhoto: () {}),
+                child: AvatarSection(
+                  onChangePhoto: () {
+
+                    // Sẽ xử lý logic sau
+                    print("Ảnh đại diện đã được thay đổi");
+                  }
+                ),
               ),
               const SizedBox(height: 16),
               Expanded(
@@ -145,8 +214,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _RetroFrame(
                         child: _UserInfoSection(
                           nameController: _nameController,
-                          usernameController: _usernameController,
                           emailController: _emailController,
+                          phonenumberController: _phonenumberController,
                           bioController: _bioController,
                         ),
                       ),
@@ -194,10 +263,48 @@ class _RetroFrame extends StatelessWidget {
   }
 }
 
-class _AvatarSection extends StatelessWidget {
-  const _AvatarSection({required this.onChangePhoto});
+class AvatarSection extends StatefulWidget {
+  const AvatarSection({super.key, required this.onChangePhoto});
 
   final VoidCallback onChangePhoto;
+
+  @override
+  State<AvatarSection> createState() => _AvatarSectionState();
+}
+
+class _AvatarSectionState extends State<AvatarSection> {
+  XFile? selectedImage;
+  dynamic _pickImageError;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _onImageButtonPressed(
+    ImageSource source, {
+    required BuildContext context,
+  }) async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          selectedImage = pickedFile;
+        });
+        widget.onChangePhoto();
+      }
+    } catch (e) {
+      setState(() {
+        _pickImageError = e;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Cannot choose image: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -215,6 +322,13 @@ class _AvatarSection extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: ProfileColors.surfaceRaised,
                   border: Border.all(color: ProfileColors.wireFrame, width: 2),
+
+                  image: selectedImage != null
+                      ? DecorationImage(
+                          image: FileImage(File(selectedImage!.path)),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
                   boxShadow: [
                     BoxShadow(
                       color: ProfileColors.lime.withValues(alpha: 0.08),
@@ -223,17 +337,22 @@ class _AvatarSection extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.person_rounded,
-                  size: 56,
-                  color: ProfileColors.textMuted,
-                ),
+                // Only show the person placeholder icon if NO image has been selected yet
+                child: selectedImage == null
+                    ? const Icon(
+                        Icons.person_rounded,
+                        size: 56,
+                        color: ProfileColors.textMuted,
+                      )
+                    : null,
               ),
               Material(
                 color: ProfileColors.surfaceRaised,
                 shape: const CircleBorder(),
                 child: InkWell(
-                  onTap: onChangePhoto,
+                  onTap: () {
+                    _onImageButtonPressed(ImageSource.gallery, context: context);
+                  },
                   customBorder: const CircleBorder(),
                   child: Container(
                     padding: const EdgeInsets.all(8),
@@ -242,7 +361,7 @@ class _AvatarSection extends StatelessWidget {
                       border: Border.all(color: ProfileColors.limeDim, width: 1.5),
                     ),
                     child: const Icon(
-                      Icons.camera_alt_outlined,
+                      Icons.picture_in_picture,
                       size: 18,
                       color: ProfileColors.lime,
                     ),
@@ -269,14 +388,14 @@ class _AvatarSection extends StatelessWidget {
 class _UserInfoSection extends StatelessWidget {
   const _UserInfoSection({
     required this.nameController,
-    required this.usernameController,
     required this.emailController,
+    required this.phonenumberController,
     required this.bioController,
   });
 
   final TextEditingController nameController;
-  final TextEditingController usernameController;
   final TextEditingController emailController;
+  final TextEditingController phonenumberController;
   final TextEditingController bioController;
 
   @override
@@ -329,21 +448,26 @@ class _UserInfoSection extends StatelessWidget {
                 label: 'Display name',
                 controller: nameController,
                 icon: Icons.badge_outlined,
+                readOnly: true,
               ),
               const SizedBox(height: 14),
-              _ProfileField(
-                label: 'Username',
-                controller: usernameController,
-                icon: Icons.alternate_email_rounded,
-              ),
+
               const SizedBox(height: 14),
               _ProfileField(
                 label: 'Email',
                 controller: emailController,
                 icon: Icons.mail_outline_rounded,
                 keyboardType: TextInputType.emailAddress,
+                readOnly: true,
               ),
               const SizedBox(height: 14),
+
+              const SizedBox(height: 14),
+              _ProfileField(
+                label: 'Phone Number',
+                controller: phonenumberController,
+                icon: Icons.phone,
+              ),
               _ProfileField(
                 label: 'Bio',
                 controller: bioController,
@@ -365,6 +489,7 @@ class _ProfileField extends StatelessWidget {
     required this.icon,
     this.keyboardType,
     this.maxLines = 1,
+    this.readOnly = false
   });
 
   final String label;
@@ -372,6 +497,7 @@ class _ProfileField extends StatelessWidget {
   final IconData icon;
   final TextInputType? keyboardType;
   final int maxLines;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -392,8 +518,9 @@ class _ProfileField extends StatelessWidget {
           controller: controller,
           keyboardType: keyboardType,
           maxLines: maxLines,
-          style: const TextStyle(
-            color: ProfileColors.textPrimary,
+          readOnly: readOnly,
+          style: TextStyle(
+            color: readOnly ? ProfileColors.textSecondary : ProfileColors.textPrimary,
             fontSize: 14,
           ),
           cursorColor: ProfileColors.lime,

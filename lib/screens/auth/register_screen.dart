@@ -115,12 +115,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final auth = context.read<AuthVM>();
     auth.clearError();
 
-    final success = await auth.login(email, password);
+    final success = await auth.register(email, password, password);
     if (!mounted) return;
 
     if (success) {
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
-    }
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: const Text(
+        "Success",
+        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+      backgroundColor: ProfileColors.surfaceRaised,
+      behavior: SnackBarBehavior.floating,
+      dismissDirection: DismissDirection.horizontal,
+      margin: const EdgeInsets.only(
+        bottom: 808 - 140,
+        left: 16,
+        right: 16,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: const BorderSide(color: ProfileColors.limeDim, width: 1),
+      ),
+    ),
+  ); 
+  if (!mounted) return;
+  Navigator.pushReplacementNamed(context, AppRoutes.login);
+}
   }
 
   @override
