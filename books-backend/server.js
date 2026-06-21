@@ -12,10 +12,11 @@ const server = app.listen(PORT, () => {
     console.log(`=========================================`);
 });
 
-// Xử lý các sự kiện tắt server không mong muốn để đóng kết nối DB an toàn nếu cần
+// CHANGE THIS: Don't kill the server instantly, just log it out!
 process.on('unhandledRejection', (err) => {
-    console.error('❌ Lỗi Unhandled Rejection:', err);
-    server.close(() => process.exit(1));
+    console.error('❌ Lỗi Unhandled Rejection CHI TIẾT:');
+    console.error(err); // This will print the full stack trace (e.g., Knex connection error)
+    // server.close(() => process.exit(1)); <-- Comment this out temporary
 });
 
 process.on('SIGTERM', () => {
