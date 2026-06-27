@@ -7,11 +7,7 @@ class BookListScreen extends StatelessWidget {
   final String title;
   final List<Book> books;
 
-  const BookListScreen({
-    super.key,
-    required this.title,
-    required this.books,
-  });
+  const BookListScreen({super.key, required this.title, required this.books});
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +48,9 @@ class BookListScreen extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => BookDetailScreen(book: book)),
+                      MaterialPageRoute(
+                        builder: (_) => BookDetailScreen(book: book),
+                      ),
                     );
                   },
                   child: _buildBookCard(book),
@@ -74,12 +72,38 @@ class BookListScreen extends StatelessWidget {
         children: [
           Expanded(
             child: Container(
+              width: double.infinity,
               decoration: BoxDecoration(
                 color: book.coverColor.withOpacity(0.2),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
               ),
-              child: const Center(
-                child: Icon(Icons.book_rounded, color: Colors.white54, size: 36),
+              // child: const Center(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+                child: book.coverImage != null && book.coverImage!.isNotEmpty
+                    ? Image.asset(
+                        book.coverImage!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Center(
+                              child: Icon(
+                                Icons.book_rounded,
+                                color: Colors.white54,
+                                size: 36,
+                              ),
+                            ),
+                      )
+                    : const Center(
+                        child: Icon(
+                          Icons.book_rounded,
+                          color: Colors.white54,
+                          size: 36,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -104,11 +128,18 @@ class BookListScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.star_rounded, color: Color(0xFFFFC107), size: 13),
+                        const Icon(
+                          Icons.star_rounded,
+                          color: Color(0xFFFFC107),
+                          size: 13,
+                        ),
                         const SizedBox(width: 2),
                         Text(
                           book.rating.toString(),
-                          style: const TextStyle(color: Colors.white60, fontSize: 11),
+                          style: const TextStyle(
+                            color: Colors.white60,
+                            fontSize: 11,
+                          ),
                         ),
                       ],
                     ),
