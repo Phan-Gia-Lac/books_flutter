@@ -6,6 +6,7 @@ import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'order_history_screen.dart';
 // Fix user info by calling api
 // Save changes has to change the information of that exact user
 // add 2 step factor for changing email?
@@ -221,6 +222,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 14),
                       _SaveChangesButton(onPressed: _onSaveChanges),
+                      const SizedBox(height: 16),
+                      _ProfileMenuTile(
+                        icon: Icons.receipt_long_rounded,
+                        label: 'Đơn hàng của tôi',
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRoutes.orderHistory);
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -593,6 +602,33 @@ class _SaveChangesButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ProfileMenuTile extends StatelessWidget {
+  const _ProfileMenuTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return _RetroFrame(
+      child: ListTile(
+        onTap: onTap,
+        leading: Icon(icon, color: ProfileColors.lime),
+        title: Text(
+          label,
+          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded, color: ProfileColors.textMuted),
       ),
     );
   }
