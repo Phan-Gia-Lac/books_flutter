@@ -7,7 +7,9 @@ import 'theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/intro_page.dart';
-import 'screens/main_pages/home.dart';
+import 'screens/main_pages/order_history_screen.dart';
+import 'screens/main_pages/checkout_screen.dart';
+import 'screens/auth/forgot_password.dart';
 import './AppRoutes.dart';
 
 class ComicoApp extends StatelessWidget {
@@ -39,6 +41,9 @@ class ComicoApp extends StatelessWidget {
 
         // Main app with bottom navigation
         AppRoutes.home: (context) => const Navigation(),
+        AppRoutes.forgotPassword: (context) => const ForgotPasswordScreen(),
+        AppRoutes.orderHistory: (context) => const OrderHistoryScreen(),
+        AppRoutes.checkout: (context) => const CheckoutScreen(),
       },
 
       // Custom page transition for all routes
@@ -51,7 +56,13 @@ class ComicoApp extends StatelessWidget {
           case AppRoutes.register:
             return _buildRoute(const RegisterScreen(), settings);
           case AppRoutes.home:
-            return _buildRoute(const HomeScreen(), settings);
+            return _buildRoute(const Navigation(), settings);
+          case AppRoutes.forgotPassword:
+            return _buildRoute(const ForgotPasswordScreen(), settings);
+          case AppRoutes.orderHistory:
+            return _buildRoute(const OrderHistoryScreen(), settings);
+          case AppRoutes.checkout:
+            return _buildRoute(const CheckoutScreen(), settings);
           default:
             return MaterialPageRoute(
               builder: (context) => const IntroPage(),

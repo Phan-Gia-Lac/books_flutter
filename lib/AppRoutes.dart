@@ -5,4 +5,7 @@ class AppRoutes {
   static const register = '/register';
   static const intro = '/intro';
   static const home = '/home';
+  static const forgotPassword = '/forgot-password';
+  static const orderHistory = '/order-history';
+  static const checkout = '/checkout';
 }
