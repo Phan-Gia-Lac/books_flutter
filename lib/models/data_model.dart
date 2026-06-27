@@ -10,6 +10,9 @@ class Book {
   final double price;
   final Color coverColor;
   final String? coverImage;
+  final int volume;
+  final String? publisherName;
+  final String? categoryName;
 
   const Book({
     this.id,
@@ -20,18 +23,92 @@ class Book {
     required this.price,
     required this.coverColor,
     this.coverImage,
+    this.volume = 1,
+    this.publisherName,
+    this.categoryName,
   });
 
   factory Book.fromJson(Map<String, dynamic> json) {
     return Book(
       id: json['id'],
       title: json['title'] ?? 'Unknown Title',
-      author: json['author'] ?? 'Unknown Author',
+      author: json['author_name'] ?? json['author'] ?? 'Unknown Author',
       description: json['description'],
       rating: (json['rating'] ?? 0.0).toDouble(),
       price: (json['price'] ?? 0.0).toDouble(),
       coverColor: const Color(0xFF6C63FF), // Default color for now
       coverImage: json['cover_image'],
+      volume: json['volume'] ?? 1,
+      publisherName: json['publisher_name'],
+      categoryName: json['category_name'],
+    );
+  }
+}
+
+class Review {
+  final int id;
+  final String userName;
+  final int rating;
+  final String? comment;
+  final DateTime createdAt;
+
+  Review({
+    required this.id,
+    required this.userName,
+    required this.rating,
+    this.comment,
+    required this.createdAt,
+  });
+
+  factory Review.fromJson(Map<String, dynamic> json) {
+    return Review(
+      id: json['id'],
+      userName: json['user_name'] ?? 'Ẩn danh',
+      rating: json['rating'] ?? 0,
+      comment: json['comment'],
+      createdAt: DateTime.parse(json['created_at']),
+    );
+  }
+}
+
+class Category {
+  final int id;
+  final String name;
+
+  Category({required this.id, required this.name});
+
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
+      id: json['id'],
+      name: json['name'],
+    );
+  }
+}
+
+class Author {
+  final int id;
+  final String name;
+
+  Author({required this.id, required this.name});
+
+  factory Author.fromJson(Map<String, dynamic> json) {
+    return Author(
+      id: json['id'],
+      name: json['name'],
+    );
+  }
+}
+
+class Publisher {
+  final int id;
+  final String name;
+
+  Publisher({required this.id, required this.name});
+
+  factory Publisher.fromJson(Map<String, dynamic> json) {
+    return Publisher(
+      id: json['id'],
+      name: json['name'],
     );
   }
 }
