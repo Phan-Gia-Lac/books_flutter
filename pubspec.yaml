@@ -39,6 +39,7 @@ dependencies:
   provider: ^6.1.2
   http: ^1.2.0
   image_picker: ^1.2.2
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -76,6 +77,7 @@ flutter:
   assets:
     - assets/animations/new_intro.riv
     - assets/animations/icon-set-1.riv
+    - assets/book-images/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
