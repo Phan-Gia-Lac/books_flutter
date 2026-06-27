@@ -20,7 +20,7 @@ class _NavigationState extends State<Navigation> {
   final List<StateMachine?> _stateMachines = [];
   late final List<FileLoader> _fileLoaders;
 
-  static final List<Widget> _screens = [
+  final List<Widget> _screens = [
     const HomeScreen(),
     const SearchScreen(),
     const ProfileScreen(),
@@ -71,6 +71,7 @@ class _NavigationState extends State<Navigation> {
     );
   }
 
+  @override
   void dispose(){
     for (final controller in _stateMachines) {
       controller?.dispose();
