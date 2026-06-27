@@ -20,39 +20,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   void forgotPassword(BuildContext context) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar( // Added the missing SnackBar widget wrapper
-      animation: CurvedAnimation(
-        parent: AnimationController(
-          duration: const Duration(milliseconds: 1000),
-          reverseDuration: const Duration(microseconds: 1000),
-          vsync: Navigator.of(context),
-        )..forward(),
-        curve: Curves.easeIn,
-      ),
-      duration: const Duration(seconds: 2),
-      content: const Text(
-        'No forget password service yet, sorry', // Updated message
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
-      backgroundColor: ProfileColors.surfaceRaised,
-      behavior: SnackBarBehavior.floating,
-      dismissDirection: DismissDirection.horizontal,
-      margin: const EdgeInsets.only(
-        bottom: 808 - 140,
-        left: 16,
-        right: 16,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: ProfileColors.limeDim, width: 1),
-      ),
-    ),
-  );
-}
+    Navigator.pushNamed(context, AppRoutes.forgotPassword);
+  }
 
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
