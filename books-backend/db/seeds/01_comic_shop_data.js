@@ -44,7 +44,7 @@ exports.seed = async function (knex) {
     ]);
 
     // Seed Users (formerly KhachHang & NhanVien)
-    await knex('users').insert([
+    await knex('users').insert([ 
         // Customers
         { full_name: 'Nguyen Van An', email: 'an.nguyen@gmail.com', password: defaultPassword, role: 'CUSTOMER', phone_number: '0901234567', points: 100 },
         { full_name: 'Tran Thi Binh', email: 'binh.tran@gmail.com', password: defaultPassword, role: 'CUSTOMER', phone_number: '0987654321', points: 50 },
@@ -54,47 +54,47 @@ exports.seed = async function (knex) {
         // Admin
         { full_name: 'Vu Hai Dang', email: 'dang.vu@comicshop.com', password: defaultPassword, role: 'ADMIN', phone_number: '0987654321', points: 0 }
     ]);
-
+ 
     // Seed Comics (formerly TruyenTranh)
     await knex('comics').insert([
-        { title: 'Doraemon', volume: 1, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: '' },
-        { title: 'Doraemon', volume: 2, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: '' },
-        { title: 'Doraemon', volume: 3, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: '' },
-        { title: 'Doraemon', volume: 4, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: '' },
-        { title: 'Doraemon', volume: 5, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: '' },
-        { title: 'Doraemon', volume: 32, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: '' },
-        { title: 'Doraemon', volume: 33, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: '' },
-        { title: 'Doraemon', volume: 34, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: '' },
-        { title: 'Detective Conan', volume: 91, price: 20000, stock_quantity: 50, category_id: 1, author_id: 2, publisher_id: 1, cover_image: '' },
-        { title: 'Detective Conan', volume: 99, price: 20000, stock_quantity: 50, category_id: 1, author_id: 2, publisher_id: 1, cover_image: '' },
-        { title: 'Detective Conan', volume: 107, price: 20000, stock_quantity: 50, category_id: 1, author_id: 2, publisher_id: 1, cover_image: '' },
-        { title: 'Dragon Ball', volume: 18, price: 20000, stock_quantity: 50, category_id: 1, author_id: 3, publisher_id: 1, cover_image: '' },
-        { title: 'Dragon Ball', volume: 36, price: 20000, stock_quantity: 50, category_id: 1, author_id: 3, publisher_id: 1, cover_image: '' },
-        { title: 'Spider-Man', volume: 1, price: 50000, stock_quantity: 50, category_id: 2, author_id: 4, publisher_id: 1, cover_image: '' },
-        { title: 'The Smurfs', volume: 1, price: 50000, stock_quantity: 50, category_id: 2, author_id: 5, publisher_id: 2, cover_image: '' },
-        { title: 'The Smurfs', volume: 2, price: 50000, stock_quantity: 50, category_id: 2, author_id: 5, publisher_id: 2, cover_image: '' },
-        { title: 'The Smurfs', volume: 4, price: 50000, stock_quantity: 50, category_id: 2, author_id: 5, publisher_id: 2, cover_image: '' },
-        { title: 'The Smurfs', volume: 8, price: 50000, stock_quantity: 50, category_id: 2, author_id: 5, publisher_id: 2, cover_image: '' },
-        { title: 'The Smurfs', volume: 12, price: 50000, stock_quantity: 50, category_id: 2, author_id: 5, publisher_id: 2, cover_image: '' },
-        { title: 'The Adventures of Tintin', volume: 1, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: '' },
-        { title: 'The Adventures of Tintin', volume: 3, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: '' },
-        { title: 'The Adventures of Tintin', volume: 5, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: '' },
-        { title: 'The Adventures of Tintin', volume: 7, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: '' },
-        { title: 'The Adventures of Tintin', volume: 9, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: '' },
-        { title: 'The Adventures of Tintin', volume: 11, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: '' },
-        { title: 'The Adventures of Tintin', volume: 12, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: '' },
-        { title: 'The Adventures of Tintin', volume: 15, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: '' },
-        { title: 'Than Dong Dat Viet', volume: 1, price: 20000, stock_quantity: 50, category_id: 3, author_id: 7, publisher_id: 5, cover_image: '' },
-        { title: 'Than Dong Dat Viet', volume: 2, price: 20000, stock_quantity: 50, category_id: 3, author_id: 7, publisher_id: 5, cover_image: '' },
-        { title: 'Than Dong Dat Viet', volume: 12, price: 20000, stock_quantity: 50, category_id: 3, author_id: 7, publisher_id: 5, cover_image: '' },
-        { title: 'Than Dong Dat Viet', volume: 21, price: 20000, stock_quantity: 50, category_id: 3, author_id: 7, publisher_id: 5, cover_image: '' },
-        { title: 'Than Dong Dat Viet', volume: 45, price: 20000, stock_quantity: 50, category_id: 3, author_id: 7, publisher_id: 5, cover_image: '' },
-        { title: 'Dung Si Hesman', volume: 1, price: 20000, stock_quantity: 50, category_id: 3, author_id: 8, publisher_id: 5, cover_image: '' },
-        { title: 'Dung Si Hesman', volume: 2, price: 20000, stock_quantity: 50, category_id: 3, author_id: 8, publisher_id: 5, cover_image: '' },
-        { title: 'Dung Si Hesman', volume: 3, price: 20000, stock_quantity: 50, category_id: 3, author_id: 8, publisher_id: 5, cover_image: '' },
-        { title: 'Dung Si Hesman', volume: 12, price: 20000, stock_quantity: 50, category_id: 3, author_id: 8, publisher_id: 5, cover_image: '' },
-        { title: 'Ty Quay', volume: 1, price: 20000, stock_quantity: 50, category_id: 3, author_id: 9, publisher_id: 1, cover_image: '' },
-        { title: 'Ty Quay', volume: 2, price: 20000, stock_quantity: 50, category_id: 3, author_id: 9, publisher_id: 1, cover_image: '' }
+        { title: 'Doraemon', volume: 1, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: 'assets/book-images/Doraemon-1.png' },
+        { title: 'Doraemon', volume: 2, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: 'assets/book-images/Doraemon-2.png' },
+        { title: 'Doraemon', volume: 3, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: 'assets/book-images/Doraemon-3.png' },
+        { title: 'Doraemon', volume: 4, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: 'assets/book-images/Doraemon-4.png' },
+        { title: 'Doraemon', volume: 5, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: 'assets/book-images/Doraemon-5.png' },
+        { title: 'Doraemon', volume: 32, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: 'assets/book-images/Doraemon-32.png' },
+        { title: 'Doraemon', volume: 33, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: 'assets/book-images/Doraemon-33.png' },
+        { title: 'Doraemon', volume: 34, price: 20000, stock_quantity: 50, category_id: 1, author_id: 1, publisher_id: 1, cover_image: 'assets/book-images/Doraemon-34.png' },
+        { title: 'Detective Conan', volume: 91, price: 20000, stock_quantity: 50, category_id: 1, author_id: 2, publisher_id: 1, cover_image: 'assets/book-images/Conan-91.png' },
+        { title: 'Detective Conan', volume: 99, price: 20000, stock_quantity: 50, category_id: 1, author_id: 2, publisher_id: 1, cover_image: 'assets/book-images/Conan-99.png' },
+        { title: 'Detective Conan', volume: 107, price: 20000, stock_quantity: 50, category_id: 1, author_id: 2, publisher_id: 1, cover_image: 'assets/book-images/Conan-107.png' },
+        { title: 'Dragon Ball', volume: 18, price: 20000, stock_quantity: 50, category_id: 1, author_id: 3, publisher_id: 1, cover_image: 'assets/book-images/Dragon-Ball-18.png' },
+        { title: 'Dragon Ball', volume: 36, price: 20000, stock_quantity: 50, category_id: 1, author_id: 3, publisher_id: 1, cover_image: 'assets/book-images/Dragon-Ball-36.png' },
+        { title: 'Spider-Man', volume: 1, price: 50000, stock_quantity: 50, category_id: 2, author_id: 4, publisher_id: 1, cover_image: 'assets/book-images/Spider-Man-1.png' },
+        { title: 'The Smurfs', volume: 1, price: 50000, stock_quantity: 50, category_id: 2, author_id: 5, publisher_id: 2, cover_image: 'assets/book-images/Smurfs-1.png' },
+        { title: 'The Smurfs', volume: 2, price: 50000, stock_quantity: 50, category_id: 2, author_id: 5, publisher_id: 2, cover_image: 'assets/book-images/Smurfs-2.png' },
+        { title: 'The Smurfs', volume: 4, price: 50000, stock_quantity: 50, category_id: 2, author_id: 5, publisher_id: 2, cover_image: 'assets/book-images/Smurfs-4.png' },
+        { title: 'The Smurfs', volume: 8, price: 50000, stock_quantity: 50, category_id: 2, author_id: 5, publisher_id: 2, cover_image: 'assets/book-images/Smurfs-8.png' },
+        { title: 'The Smurfs', volume: 12, price: 50000, stock_quantity: 50, category_id: 2, author_id: 5, publisher_id: 2, cover_image: 'assets/book-images/Smurfs-12.png' },
+        { title: 'The Adventures of Tintin', volume: 1, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: 'assets/book-images/Tintin-1.png' },
+        { title: 'The Adventures of Tintin', volume: 3, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: 'assets/book-images/Tintin-3.png' },
+        { title: 'The Adventures of Tintin', volume: 5, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: 'assets/book-images/Tintin-5.png' },
+        { title: 'The Adventures of Tintin', volume: 7, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: 'assets/book-images/Tintin-7.png' },
+        { title: 'The Adventures of Tintin', volume: 9, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: 'assets/book-images/Tintin-9.png' },
+        { title: 'The Adventures of Tintin', volume: 11, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: 'assets/book-images/Tintin-11.png' },
+        { title: 'The Adventures of Tintin', volume: 12, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: 'assets/book-images/Tintin-12.png' },
+        { title: 'The Adventures of Tintin', volume: 15, price: 50000, stock_quantity: 50, category_id: 2, author_id: 6, publisher_id: 2, cover_image: 'assets/book-images/Tintin-15.png' },
+        { title: 'Than Dong Dat Viet', volume: 1, price: 20000, stock_quantity: 50, category_id: 3, author_id: 7, publisher_id: 5, cover_image: 'assets/book-images/TDDV-1.png' },
+        { title: 'Than Dong Dat Viet', volume: 2, price: 20000, stock_quantity: 50, category_id: 3, author_id: 7, publisher_id: 5, cover_image: 'assets/book-images/TDDV-2.png' },
+        { title: 'Than Dong Dat Viet', volume: 12, price: 20000, stock_quantity: 50, category_id: 3, author_id: 7, publisher_id: 5, cover_image: 'assets/book-images/TDDV-12.png' },
+        { title: 'Than Dong Dat Viet', volume: 21, price: 20000, stock_quantity: 50, category_id: 3, author_id: 7, publisher_id: 5, cover_image: 'assets/book-images/TDDV-21.png' },
+        { title: 'Than Dong Dat Viet', volume: 45, price: 20000, stock_quantity: 50, category_id: 3, author_id: 7, publisher_id: 5, cover_image: 'assets/book-images/TDDV-45.png' },
+        { title: 'Dung Si Hesman', volume: 1, price: 20000, stock_quantity: 50, category_id: 3, author_id: 8, publisher_id: 5, cover_image: 'assets/book-images/Hesman-1.png' },
+        { title: 'Dung Si Hesman', volume: 2, price: 20000, stock_quantity: 50, category_id: 3, author_id: 8, publisher_id: 5, cover_image: 'assets/book-images/Hesman-2.png' },
+        { title: 'Dung Si Hesman', volume: 3, price: 20000, stock_quantity: 50, category_id: 3, author_id: 8, publisher_id: 5, cover_image: 'assets/book-images/Hesman-3.png' },
+        { title: 'Dung Si Hesman', volume: 12, price: 20000, stock_quantity: 50, category_id: 3, author_id: 8, publisher_id: 5, cover_image: 'assets/book-images/Hesman-12.png' },
+        { title: 'Ty Quay', volume: 1, price: 20000, stock_quantity: 50, category_id: 3, author_id: 9, publisher_id: 1, cover_image: 'assets/book-images/Ty-Quay-1.png' },
+        { title: 'Ty Quay', volume: 2, price: 20000, stock_quantity: 50, category_id: 3, author_id: 9, publisher_id: 1, cover_image: 'assets/book-images/Ty-Quay-2.png' }
     ]);
 
     // Seed Orders (formerly HoaDon)

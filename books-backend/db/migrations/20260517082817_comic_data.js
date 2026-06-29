@@ -46,6 +46,7 @@ exports.up = function (knex) {
             table.string('status', 50).defaultTo('active'); // active, inactive
             table.boolean('is_deleted').defaultTo(false);
             table.timestamps(true, true);
+            table.text('description');
         })
         .createTable('orders', (table) => {
             table.increments('id').primary();
@@ -64,6 +65,14 @@ exports.up = function (knex) {
             table.integer('quantity').notNullable();
             table.integer('price').notNullable();
             table.primary(['order_id', 'comic_id']);
+        })
+        .createTable('reviews', (table) => {
+            table.increments('id').primary();
+            table.integer('comic_id').unsigned().references('id').inTable('comics').onDelete('CASCADE');
+            table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE');
+            table.integer('rating').notNullable().checkBetween([1, 5]); // 1-5 sao
+            table.text('comment');
+            table.timestamps(true, true);
         });
 };
 
@@ -79,5 +88,6 @@ exports.down = function (knex) {
         .dropTableIfExists('users')
         .dropTableIfExists('authors')
         .dropTableIfExists('publishers')
-        .dropTableIfExists('categories');
+        .dropTableIfExists('categories')
+        .dropTableIfExists('reviews');
 };

@@ -1,44 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
-
-// Reusing Book model — move this to a shared models file later
-class Book {
-  final String title;
-  final String author;
-  final double rating;
-  final double price;
-  final Color coverColor;
-  final String genre;
-
-  const Book({
-    required this.title,
-    required this.author,
-    required this.rating,
-    required this.price,
-    required this.coverColor,
-    required this.genre,
-  });
-}
-
-// Placeholder books
-final List<Book> _allBooks = [
-  Book(title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', rating: 4.5, price: 12.99, coverColor: const Color(0xFF6C63FF), genre: 'Fiction'),
-  Book(title: 'To Kill a Mockingbird', author: 'Harper Lee', rating: 4.8, price: 10.99, coverColor: const Color(0xFF2196F3), genre: 'Fiction'),
-  Book(title: '1984', author: 'George Orwell', rating: 4.7, price: 9.99, coverColor: const Color(0xFFE91E63), genre: 'Sci-Fi'),
-  Book(title: 'Dune', author: 'Frank Herbert', rating: 4.6, price: 14.99, coverColor: const Color(0xFFFF9800), genre: 'Sci-Fi'),
-  Book(title: 'Harry Potter', author: 'J.K. Rowling', rating: 4.9, price: 15.99, coverColor: const Color(0xFF9C27B0), genre: 'Fantasy'),
-  Book(title: 'The Hobbit', author: 'J.R.R. Tolkien', rating: 4.7, price: 11.99, coverColor: const Color(0xFF4CAF50), genre: 'Fantasy'),
-  Book(title: 'Sherlock Holmes', author: 'Arthur Conan Doyle', rating: 4.5, price: 8.99, coverColor: const Color(0xFF795548), genre: 'Mystery'),
-  Book(title: 'The Alchemist', author: 'Paulo Coelho', rating: 4.6, price: 10.99, coverColor: const Color(0xFF009688), genre: 'Fiction'),
-  Book(title: 'Brave New World', author: 'Aldous Huxley', rating: 4.3, price: 9.99, coverColor: const Color(0xFFF44336), genre: 'Sci-Fi'),
-  Book(title: 'Fahrenheit 451', author: 'Ray Bradbury', rating: 4.4, price: 8.99, coverColor: const Color(0xFF3F51B5), genre: 'Sci-Fi'),
-];
-
-const List<String> _genres = [
-  'Fiction', 'Sci-Fi', 'Fantasy', 'Mystery',
-  'Romance', 'Thriller', 'Horror', 'Biography',
-  'Self-Help', 'History',
-];
+import '../../models/data_model.dart';
+import '../../viewmodel/productsVM.dart';
+import '../controllers/book_detail.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -49,44 +15,420 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final _searchController = TextEditingController();
+  Timer? _debounce;
+  int? _selectedCategoryId;
+  int? _selectedAuthorId;
+  int? _selectedPublisherId;
   String _query = '';
-  String? _selectedGenre;
-  bool _isFocused = false;
 
-  List<Book> get _suggestions => _query.isEmpty
-      ? []
-      : _allBooks
-          .where((b) =>
-              b.title.toLowerCase().startsWith(_query.toLowerCase()))
-          .take(4)
-          .toList();
+  // Filter states
+  RangeValues _currentPriceRange = const RangeValues(0, 100000);
+  double _minRating = 0;
+  String? _sortBy;
 
-  List<Book> get _results => _allBooks.where((b) {
-        final matchesQuery = _query.isEmpty ||
-            b.title.toLowerCase().contains(_query.toLowerCase()) ||
-            b.author.toLowerCase().contains(_query.toLowerCase());
-        final matchesGenre =
-            _selectedGenre == null || b.genre == _selectedGenre;
-        return matchesQuery && matchesGenre;
-      }).toList();
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final vm = Provider.of<ProductsVM>(context, listen: false);
+      vm.fetchCategories();
+      vm.fetchAuthors();
+      vm.fetchPublishers();
+
+      // Handle category passed from HomeScreen
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is int) {
+        _selectedCategoryId = args;
+      }
+
+      _triggerSearch();
+    });
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _debounce?.cancel();
     super.dispose();
+  }
+
+  void _triggerSearch() {
+    Provider.of<ProductsVM>(context, listen: false).searchBooks(
+      query: _searchController.text,
+      categoryId: _selectedCategoryId,
+      authorId: _selectedAuthorId,
+      publisherId: _selectedPublisherId,
+      minPrice: _currentPriceRange.start,
+      maxPrice: _currentPriceRange.end,
+      minRating: _minRating,
+      sortBy: _sortBy,
+    );
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() => _query = query);
+      _triggerSearch();
+    });
+  }
+
+  void _selectCategory(int? categoryId) {
+    setState(() {
+      if (_selectedCategoryId == categoryId) {
+        _selectedCategoryId = null;
+      } else {
+        _selectedCategoryId = categoryId;
+      }
+    });
+    _triggerSearch();
+  }
+
+  void _showFilterSheet() {
+    final vm = Provider.of<ProductsVM>(context, listen: false);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: ProfileColors.background,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Bộ lọc & Sắp xếp',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  const Divider(color: Colors.white10),
+                  const SizedBox(height: 16),
+
+                  // ── Price Range ──
+                  const Text(
+                    'Khoảng giá (\$)',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  RangeSlider(
+                    values: _currentPriceRange,
+                    min: 0,
+                    max: 100000,
+                    divisions: 100,
+                    activeColor: ProfileColors.lime,
+                    inactiveColor: Colors.white10,
+                    labels: RangeLabels(
+                      '\$${_currentPriceRange.start.round()}',
+                      '\$${_currentPriceRange.end.round()}',
+                    ),
+                    onChanged: (values) {
+                      setModalState(() => _currentPriceRange = values);
+                      setState(() {});
+                    },
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '\$${_currentPriceRange.start.round()}',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                      Text(
+                        '\$${_currentPriceRange.end.round()}',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Rating ──
+                  const Text(
+                    'Đánh giá tối thiểu',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(5, (index) {
+                      final starVal = index + 1.0;
+                      return GestureDetector(
+                        onTap: () {
+                          setModalState(() => _minRating = starVal);
+                          setState(() {});
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _minRating == starVal
+                                ? ProfileColors.lime
+                                : ProfileColors.surface,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                '$index+',
+                                style: TextStyle(
+                                  color: _minRating == starVal
+                                      ? Colors.black
+                                      : Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.star_rounded,
+                                color: _minRating == starVal
+                                    ? Colors.black
+                                    : Colors.amber,
+                                size: 16,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Author ──
+                  const Text(
+                    'Tác giả',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 40,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: vm.authors.length,
+                      itemBuilder: (context, index) {
+                        final author = vm.authors[index];
+                        final isSelected = _selectedAuthorId == author.id;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(author.name),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setModalState(
+                                () => _selectedAuthorId = selected
+                                    ? author.id
+                                    : null,
+                              );
+                              setState(() {});
+                            },
+                            selectedColor: ProfileColors.lime,
+                            backgroundColor: ProfileColors.surface,
+                            labelStyle: TextStyle(
+                              color: isSelected ? Colors.black : Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Publisher ──
+                  const Text(
+                    'Nhà xuất bản',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 40,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: vm.publishers.length,
+                      itemBuilder: (context, index) {
+                        final pub = vm.publishers[index];
+                        final isSelected = _selectedPublisherId == pub.id;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(pub.name),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setModalState(
+                                () => _selectedPublisherId = selected
+                                    ? pub.id
+                                    : null,
+                              );
+                              setState(() {});
+                            },
+                            selectedColor: ProfileColors.lime,
+                            backgroundColor: ProfileColors.surface,
+                            labelStyle: TextStyle(
+                              color: isSelected ? Colors.black : Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Sorting ──
+                  const Text(
+                    'Sắp xếp theo',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      _sortChip(setModalState, 'Mới nhất', 'newest'),
+                      _sortChip(
+                        setModalState,
+                        'Giá: Thấp đến Cao',
+                        'price_asc',
+                      ),
+                      _sortChip(
+                        setModalState,
+                        'Giá: Cao đến Thấp',
+                        'price_desc',
+                      ),
+                      _sortChip(setModalState, 'Đánh giá cao', 'rating_desc'),
+                    ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // ── Apply Button ──
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ProfileColors.lime,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        _triggerSearch();
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Áp dụng',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        setModalState(() {
+                          _currentPriceRange = const RangeValues(0, 100000);
+                          _minRating = 0;
+                          _sortBy = null;
+                          _selectedAuthorId = null;
+                          _selectedPublisherId = null;
+                        });
+                        setState(() {});
+                        _triggerSearch();
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Xóa tất cả',
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _sortChip(StateSetter setModalState, String label, String value) {
+    final isSelected = _sortBy == value;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        setModalState(() => _sortBy = selected ? value : null);
+        setState(() {});
+      },
+      selectedColor: ProfileColors.lime,
+      backgroundColor: ProfileColors.surface,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.black : Colors.white70,
+        fontSize: 12,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final vm = Provider.of<ProductsVM>(context);
+
     return Scaffold(
+      backgroundColor: ProfileColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: ProfileColors.background,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: const Text(
-          'Search',
+          'Tìm kiếm',
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
@@ -94,194 +436,158 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
       body: Column(
         children: [
-          // ── Search Bar ──
+          // ── Search Bar & Filter Button ──
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: Focus(
-              onFocusChange: (focused) =>
-                  setState(() => _isFocused = focused),
-              child: TextField(
-                controller: _searchController,
-                style: const TextStyle(color: AppColors.textPrimary),
-                cursorColor: AppColors.accent,
-                onChanged: (value) => setState(() => _query = value),
-                decoration: InputDecoration(
-                  hintText: 'Search books, authors...',
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _query.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.close_rounded),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _query = '');
-                          },
-                        )
-                      : null,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    style: const TextStyle(color: Colors.white),
+                    cursorColor: ProfileColors.lime,
+                    onChanged: _onSearchChanged,
+                    decoration: InputDecoration(
+                      hintText: 'Tìm kiếm truyện, tác giả...',
+                      hintStyle: const TextStyle(color: Colors.white24),
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: Colors.white60,
+                      ),
+                      filled: true,
+                      fillColor: ProfileColors.surface,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(
+                                Icons.close_rounded,
+                                color: Colors.white60,
+                              ),
+                              onPressed: () {
+                                _searchController.clear();
+                                _onSearchChanged('');
+                              },
+                            )
+                          : null,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: _showFilterSheet,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color:
+                          (_sortBy != null ||
+                              _minRating > 0 ||
+                              _currentPriceRange.start > 0 ||
+                              _currentPriceRange.end < 100000 ||
+                              _selectedAuthorId != null ||
+                              _selectedPublisherId != null)
+                          ? ProfileColors.lime
+                          : ProfileColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.tune_rounded,
+                      color:
+                          (_sortBy != null ||
+                              _minRating > 0 ||
+                              _currentPriceRange.start > 0 ||
+                              _currentPriceRange.end < 100000 ||
+                              _selectedAuthorId != null ||
+                              _selectedPublisherId != null)
+                          ? Colors.black
+                          : Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
-          // ── Suggestions dropdown ──
-          if (_suggestions.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.inputBorder),
-              ),
-              child: ListView.separated(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _suggestions.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final book = _suggestions[index];
-                  return ListTile(
-                    dense: true,
-                    leading: const Icon(
-                      Icons.search_rounded,
-                      color: AppColors.textSecondary,
-                      size: 18,
+          const SizedBox(height: 16),
+
+          // ── Categories Horizontal List ──
+          SizedBox(
+            height: 40,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: vm.categories.length,
+              itemBuilder: (context, index) {
+                final cat = vm.categories[index];
+                final isSelected = _selectedCategoryId == cat.id;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(cat.name),
+                    selected: isSelected,
+                    onSelected: (_) => _selectCategory(cat.id),
+                    backgroundColor: ProfileColors.surface,
+                    selectedColor: ProfileColors.lime,
+                    checkmarkColor: Colors.black,
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.black : Colors.white70,
+                      fontSize: 12,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
-                    title: RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: book.title.substring(0, _query.length),
-                            style: TextStyle(
-                              color: AppColors.accent,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                          TextSpan(
-                            text: book.title.substring(_query.length),
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    trailing: const Icon(
-                      Icons.north_west_rounded,
-                      color: AppColors.textSecondary,
-                      size: 16,
+                    side: BorderSide(
+                      color: isSelected ? ProfileColors.lime : Colors.white10,
                     ),
-                    onTap: () {
-                      _searchController.text = book.title;
-                      setState(() => _query = book.title);
-                    },
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
+          ),
 
           const SizedBox(height: 16),
 
           // ── Body ──
           Expanded(
-            child: _query.isEmpty
-                ? _buildEmptyState()
-                : _buildResults(),
+            child: vm.isSearching
+                ? const Center(
+                    child: CircularProgressIndicator(color: ProfileColors.lime),
+                  )
+                : _buildResults(vm),
           ),
         ],
       ),
     );
   }
 
-  // ── Empty state — popular genres ──
-  Widget _buildEmptyState() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Popular Genres',
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Genre chips
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: _genres.map((genre) {
-              final isSelected = _selectedGenre == genre;
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedGenre = isSelected ? null : genre;
-                    if (!isSelected) _query = genre;
-                    _searchController.text = isSelected ? '' : genre;
-                  });
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: ProfileColors.lime,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected
-                          ? ProfileColors.limeDim
-                          : ProfileColors.lime,
-                      width: isSelected ? 2 : 1,
-                    ),
-                  ),
-                  child: Text(
-                    genre,
-                    style: TextStyle(
-                      color: AppColors.black,
-                      fontSize: 13,
-                      fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w500,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Results — grid ──
-  Widget _buildResults() {
-    if (_results.isEmpty) {
+  Widget _buildResults(ProductsVM vm) {
+    if (vm.searchResults.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off_rounded,
-                color: AppColors.textSecondary, size: 48),
+            const Icon(
+              Icons.search_off_rounded,
+              color: Colors.white24,
+              size: 64,
+            ),
             const SizedBox(height: 16),
-            Text(
-              'No books found',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 16,
-              ),
+            const Text(
+              'Không tìm thấy truyện nào',
+              style: TextStyle(color: Colors.white60, fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(
-              'Try a different search term',
-              style: TextStyle(
-                color: AppColors.textDisabled,
-                fontSize: 13,
-              ),
+              _query.isEmpty
+                  ? 'Hãy thử tìm kiếm gì đó'
+                  : 'Thử từ khóa khác xem sao',
+              style: const TextStyle(color: Colors.white30, fontSize: 13),
             ),
           ],
         ),
@@ -289,8 +595,8 @@ class _SearchScreenState extends State<SearchScreen> {
     }
 
     return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: _results.length,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      itemCount: vm.searchResults.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 16,
@@ -298,7 +604,16 @@ class _SearchScreenState extends State<SearchScreen> {
         childAspectRatio: 0.72,
       ),
       itemBuilder: (context, index) {
-        return _buildBookCard(_results[index]);
+        final book = vm.searchResults[index];
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => BookDetailScreen(book: book)),
+            );
+          },
+          child: _buildBookCard(book),
+        );
       },
     );
   }
@@ -306,23 +621,47 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildBookCard(Book book) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: ProfileColors.surface,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Container(
+              width: double.infinity,
               decoration: BoxDecoration(
-                color: book.coverColor,
+                color: book.coverColor.withValues(alpha: 0.2),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(12),
                 ),
               ),
-              child: const Center(
-                child: Icon(Icons.book_rounded,
-                    color: Colors.white54, size: 36),
+              //child: const Center(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+                child: book.coverImage != null && book.coverImage!.isNotEmpty
+                    ? Image.asset(
+                        book.coverImage!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Center(
+                              child: Icon(
+                                Icons.book_rounded,
+                                color: Colors.white54,
+                                size: 36,
+                              ),
+                            ),
+                      )
+                    : const Center(
+                        child: Icon(
+                          Icons.book_rounded,
+                          color: Colors.white54,
+                          size: 36,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -334,7 +673,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 Text(
                   book.title,
                   style: const TextStyle(
-                    color: AppColors.textPrimary,
+                    color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -347,13 +686,16 @@ class _SearchScreenState extends State<SearchScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.star_rounded,
-                            color: Color(0xFFFFC107), size: 13),
+                        const Icon(
+                          Icons.star_rounded,
+                          color: Color(0xFFFFC107),
+                          size: 13,
+                        ),
                         const SizedBox(width: 2),
                         Text(
                           book.rating.toString(),
                           style: const TextStyle(
-                            color: AppColors.textSecondary,
+                            color: Colors.white60,
                             fontSize: 11,
                           ),
                         ),
@@ -361,8 +703,8 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                     Text(
                       '\$${book.price}',
-                      style: TextStyle(
-                        color: AppColors.accent,
+                      style: const TextStyle(
+                        color: ProfileColors.lime,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),

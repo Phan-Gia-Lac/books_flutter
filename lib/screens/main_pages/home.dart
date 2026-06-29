@@ -1,9 +1,13 @@
+import 'package:books_flutter/screens/main_pages/search.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../AppRoutes.dart';
 import '../../theme/app_theme.dart';
 import '../../models/data_model.dart';
 import '../../viewmodel/productsVM.dart';
 import '../controllers/book_detail.dart';
+import 'book_list.dart';
+import 'cart_screen.dart';
 
 
 // ── HomeScreen ───────────────────────────────────────────────────────────────
@@ -40,7 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Consumer<ProductsVM>(
         builder: (context, vm, child) {
           if (vm.isLoading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.accent));
+            return const Center(
+                child: CircularProgressIndicator(color: AppColors.accent));
           }
 
           if (vm.error != null) {
@@ -48,7 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Lỗi: ${vm.error}', style: const TextStyle(color: Colors.white)),
+                  Text('Lỗi: ${vm.error}',
+                      style: const TextStyle(color: Colors.white)),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => vm.fetchBooks(),
@@ -59,22 +65,72 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
 
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildBanner(),
-                const SizedBox(height: 28),
-                _buildSectionHeader('Featured', onSeeAll: () {}),
-                const SizedBox(height: 16),
-                _buildFeaturedBooks(vm.featuredBooks),
-                const SizedBox(height: 28),
-                _buildSectionHeader('Popular', onSeeAll: () {}),
-                const SizedBox(height: 16),
-                _buildPopularGrid(vm.popularBooks),
-                const SizedBox(height: 32),
-              ],
-            ),
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSearchBar(),
+                    const SizedBox(height: 16),
+                    _buildCategories(vm.categories),
+                    const SizedBox(height: 16),
+                    _buildBanner(),
+                    const SizedBox(height: 28),
+                    _buildSectionHeader('Featured', onSeeAll: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BookListScreen(
+                            title: 'Featured Books',
+                            books: vm.featuredBooks,
+                          ),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 16),
+                    _buildFeaturedBooks(vm.featuredBooks),
+                    const SizedBox(height: 28),
+                    _buildSectionHeader('Popular', onSeeAll: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BookListScreen(
+                            title: 'Popular Books',
+                            books: vm.popularBooks,
+                          ),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.72,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final book = vm.popularBooks[index];
+                      return GestureDetector(
+                        onTap: () => _navigateToDetail(context, book),
+                        child: _buildPopularCard(book),
+                      );
+                    },
+                    childCount: vm.popularBooks.length,
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 32),
+              ),
+            ],
           );
         },
       ),
@@ -98,12 +154,93 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       actions: [
+        // NEW: Shortcut to Order History
         IconButton(
-          icon: const Icon(Icons.shopping_cart_outlined, color: AppColors.white),
-          onPressed: () {},
+          icon: const Icon(Icons.receipt_long_outlined, color: AppColors.white),
+          onPressed: () {
+            Navigator.pushNamed(context, AppRoutes.orderHistory);
+          },
+        ),
+        IconButton(
+          icon:
+              const Icon(Icons.shopping_cart_outlined, color: AppColors.white),
+          onPressed: () {
+            // UPDATED: Now navigates to CartScreen
+            // OLD: onPressed: () {},
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CartScreen()),
+            );
+          },
         ),
         const SizedBox(width: 8),
       ],
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SearchScreen()),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: ProfileColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.search_rounded, color: Colors.white60, size: 20),
+            SizedBox(width: 12),
+            Text(
+              'Tìm kiếm truyện tranh...',
+              style: TextStyle(color: Colors.white24, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategories(List<Category> categories) {
+    if (categories.isEmpty) return const SizedBox.shrink();
+    return SizedBox(
+      height: 40,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final cat = categories[index];
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ActionChip(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const SearchScreen(),
+                    settings: RouteSettings(arguments: cat.id),
+                  ),
+                );
+              },
+              label: Text(cat.name),
+              backgroundColor: ProfileColors.surface,
+              labelStyle: const TextStyle(color: Colors.white70, fontSize: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: const BorderSide(color: Colors.white10),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -132,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 150,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
               ),
             ),
           ),
@@ -144,22 +281,24 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.06),
+                color: Colors.white.withValues(alpha: 0.06),
               ),
             ),
           ),
 
           // Content
           Padding(
-            padding: const EdgeInsets.all(24),
+            // padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
@@ -172,21 +311,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                // const SizedBox(height: 12)
+                const SizedBox(height: 8),
                 const Text(
                   'Get 30% off\nyour first order',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 22,
+                    // fontSize: 22,
+                    fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    height: 1.3,
+                    height: 1.2,
                   ),
                 ),
-                const SizedBox(height: 16),
+                // const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 GestureDetector(
                   onTap: () {},
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
@@ -195,7 +338,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       'Shop Now',
                       style: TextStyle(
                         color: Color(0xFF6C63FF),
-                        fontSize: 13,
+                        // fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -245,7 +389,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (books.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(horizontal: 20),
-        child: Text('Không có truyện nổi bật', style: TextStyle(color: Colors.white70)),
+        child: Text('Không có truyện nổi bật',
+            style: TextStyle(color: Colors.white70)),
       );
     }
     return SizedBox(
@@ -281,8 +426,20 @@ class _HomeScreenState extends State<HomeScreen> {
               color: book.coverColor,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Center(
-              child: Icon(Icons.book_rounded, color: Colors.white54, size: 40),
+            //child: const Center(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: book.coverImage != null && book.coverImage!.isNotEmpty
+                  ? Image.asset(
+                      book.coverImage!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(Icons.book_rounded, color: Colors.white54, size: 40),
+                      ),
+                    )
+                  : const Center(
+                      child: Icon(Icons.book_rounded, color: Colors.white54, size: 40),
+                    ),
             ),
           ),
           const SizedBox(height: 10),
@@ -306,10 +463,11 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.star_rounded, color: Color(0xFFFFC107), size: 14),
+                  const Icon(Icons.star_rounded,
+                      color: Color(0xFFFFC107), size: 14),
                   const SizedBox(width: 2),
                   Text(
-                    book.rating.toString(),
+                     book.rating.toString(),
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12,
@@ -319,7 +477,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Text(
                 '\$${book.price}',
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.accent,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -332,42 +490,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Popular Books – grid ────────────────────────────────────────────────────
-  Widget _buildPopularGrid(List<Book> books) {
-    if (books.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        child: Text('Không có truyện phổ biến', style: TextStyle(color: Colors.white70)),
-      );
-    }
-    return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: books.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.72,
-      ),
-      itemBuilder: (context, index) {
-        final book = books[index];
-        // FIX: wrap in GestureDetector so tapping navigates to detail
-        return GestureDetector(
-          onTap: () => _navigateToDetail(context, book),
-          child: _buildPopularCard(book),
-        );
-      },
-    );
-  }
-
   Widget _buildPopularCard(Book book) {
     return Container(
       decoration: BoxDecoration(
         color: ProfileColors.surface,
         borderRadius: BorderRadius.circular(12),
-        // FIX: use a subtle border color instead of solid white
         border: Border.all(color: Colors.white12, width: 1),
       ),
       child: Column(
@@ -375,18 +502,37 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Expanded(
             child: Container(
+              width: double.infinity,
               decoration: BoxDecoration(
                 color: ProfileColors.surfaceRaised,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(11),
                 ),
               ),
-              child: Center(
-                child: Icon(
-                  Icons.book_rounded,
-                  color: book.coverColor.withOpacity(0.85),
-                  size: 36,
+              // child: Center(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(11),
                 ),
+                child: book.coverImage != null && book.coverImage!.isNotEmpty
+                    ? Image.asset(
+                        book.coverImage!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Center(
+                          child: Icon(
+                            Icons.book_rounded,
+                            color: book.coverColor.withValues(alpha: 0.85),
+                            size: 36,
+                          ),
+                        ),
+                      )
+                    : Center(
+                        child: Icon(
+                          Icons.book_rounded,
+                          color: book.coverColor.withValues(alpha: 0.85),
+                          size: 36,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -414,7 +560,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.star_rounded, color: Color(0xFFFFC107), size: 13),
+                        const Icon(Icons.star_rounded,
+                            color: Color(0xFFFFC107), size: 13),
                         const SizedBox(width: 2),
                         Text(
                           book.rating.toString(),

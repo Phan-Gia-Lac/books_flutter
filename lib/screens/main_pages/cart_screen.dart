@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/data_model.dart';
+import '../../AppRoutes.dart';
+import '../../models/cart_item.dart';
 import '../../theme/app_theme.dart';
 import '../../viewmodel/productsVM.dart';
+import 'checkout_screen.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -63,12 +65,14 @@ class CartScreen extends StatelessWidget {
               Expanded(
                 child: ListView.separated(
                   padding: const EdgeInsets.all(20),
-                  itemCount: vm.itemCount,
+                  itemCount: vm.cartItems.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
-                    final book = vm.cartItems[index];
+                    final item = vm.cartItems[index];
                     return _CartItemTile(
-                      book: book,
+                      cartItem: item,
+                      onIncrement: () => vm.incrementQuantity(item.book.id!),
+                      onDecrement: () => vm.decrementQuantity(item.book.id!),
                       onRemove: () => vm.removeAt(index),
                     );
                   },
@@ -89,15 +93,20 @@ class CartScreen extends StatelessWidget {
 
 class _CartItemTile extends StatelessWidget {
   const _CartItemTile({
-    required this.book,
+    required this.cartItem,
+    required this.onIncrement,
+    required this.onDecrement,
     required this.onRemove,
   });
 
-  final Book book;
+  final CartItem cartItem;
+  final VoidCallback onIncrement;
+  final VoidCallback onDecrement;
   final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
+    final book = cartItem.book;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -114,10 +123,27 @@ class _CartItemTile extends StatelessWidget {
               color: ProfileColors.surfaceRaised,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              Icons.book_rounded,
-              color: book.coverColor.withValues(alpha: 0.85),
-              size: 28,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: book.coverImage != null && book.coverImage!.isNotEmpty
+                  ? Image.asset(
+                      book.coverImage!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Center(
+                        child: Icon(
+                          Icons.book_rounded,
+                          color: book.coverColor.withValues(alpha: 0.85),
+                          size: 28,
+                        ),
+                      ),
+                    )
+                  : Center(
+                      child: Icon(
+                        Icons.book_rounded,
+                        color: book.coverColor.withValues(alpha: 0.85),
+                        size: 28,
+                      ),
+                    ),
             ),
           ),
           const SizedBox(width: 12),
@@ -132,7 +158,7 @@ class _CartItemTile extends StatelessWidget {
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
@@ -155,9 +181,44 @@ class _CartItemTile extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            onPressed: onRemove,
-            icon: const Icon(Icons.close_rounded, color: ProfileColors.textSecondary),
+          Column(
+            children: [
+              IconButton(
+                onPressed: onRemove,
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
+                icon: const Icon(Icons.close_rounded, color: ProfileColors.textSecondary, size: 18),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: ProfileColors.surfaceRaised,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: onDecrement,
+                      iconSize: 16,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(Icons.remove_rounded, color: Colors.white),
+                    ),
+                    Text(
+                      '${cartItem.quantity}',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      onPressed: onIncrement,
+                      iconSize: 16,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(Icons.add_rounded, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -210,7 +271,9 @@ class _CartSummary extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           GestureDetector(
-            onTap: () {},
+            onTap: () {
+              Navigator.pushNamed(context, AppRoutes.checkout);
+            },
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(

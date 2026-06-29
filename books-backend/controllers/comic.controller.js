@@ -9,14 +9,32 @@ const comicService = require('../services/comic.service');
 exports.getAllComics = async (req, res, next) => {
     try {
         // Lấy query parameters từ URL, thiết lập giá trị mặc định nếu không có
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const categoryId = req.query.category ? parseInt(req.query.category) : null;
+        const page = req.query.page && !isNaN(parseInt(req.query.page)) ? parseInt(req.query.page) : 1;
+        const limit = req.query.limit && !isNaN(parseInt(req.query.limit)) ? parseInt(req.query.limit) : 10;
+        const categoryId = req.query.category && !isNaN(parseInt(req.query.category)) ? parseInt(req.query.category) : null;
+        const authorId = req.query.author && !isNaN(parseInt(req.query.author)) ? parseInt(req.query.author) : null;
+        const publisherId = req.query.publisher && !isNaN(parseInt(req.query.publisher)) ? parseInt(req.query.publisher) : null;
+        const search = req.query.search || '';
+        const minPrice = req.query.min_price && !isNaN(parseInt(req.query.min_price)) ? parseInt(req.query.min_price) : null;
+        const maxPrice = req.query.max_price && !isNaN(parseInt(req.query.max_price)) ? parseInt(req.query.max_price) : null;
+        const minRating = req.query.min_rating && !isNaN(parseFloat(req.query.min_rating)) ? parseFloat(req.query.min_rating) : null;
+        const sortBy = req.query.sort_by || 'newest';
 
         const offset = (page - 1) * limit;
 
         // Service sẽ gọi database thông qua Model
-        const comics = await comicService.getComicsList({ limit, offset, categoryId });
+        const { comics, totalItems } = await comicService.getComicsList({
+            limit,
+            offset,
+            categoryId,
+            authorId,
+            publisherId,
+            search,
+            minPrice,
+            maxPrice,
+            minRating,
+            sortBy
+        });
 
         res.status(200).json({
             success: true,
@@ -25,7 +43,8 @@ exports.getAllComics = async (req, res, next) => {
             meta: {
                 current_page: page,
                 items_per_page: limit,
-                // Nếu làm kỹ, Service có thể trả thêm total_items để frontend tính tổng số trang
+                total_items: totalItems,
+                total_pages: Math.ceil(totalItems / limit)
             }
         });
     } catch (error) {

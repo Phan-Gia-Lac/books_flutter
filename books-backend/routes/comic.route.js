@@ -2,12 +2,16 @@
 const express = require('express');
 const router = express.Router();
 const comicController = require('../controllers/comic.controller');
+const reviewRoutes = require('./review.route');
 const auth = require('../middlewares/auth.middleware');
 const role = require('../middlewares/role.middleware');
 
 // [PUBLIC] Khách hàng xem danh sách và chi tiết truyện
 router.get('/', comicController.getAllComics);
 router.get('/:id', comicController.getComicById);
+
+// Gắn route review vào truyện
+router.use('/:comicId/reviews', reviewRoutes);
 
 // [PRIVATE - STAFF & ADMIN] Thêm truyện mới
 router.post('/', auth, role(['STAFF', 'ADMIN']), comicController.createComic);
