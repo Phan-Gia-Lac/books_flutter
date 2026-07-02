@@ -71,7 +71,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSearchBar(),
                     const SizedBox(height: 16),
                     _buildCategories(vm.categories),
                     const SizedBox(height: 16),
@@ -178,35 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const SearchScreen()),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: ProfileColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white10),
-        ),
-        child: const Row(
-          children: [
-            Icon(Icons.search_rounded, color: Colors.white60, size: 20),
-            SizedBox(width: 12),
-            Text(
-              'Tìm kiếm truyện tranh...',
-              style: TextStyle(color: Colors.white24, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+ 
 
   Widget _buildCategories(List<Category> categories) {
     if (categories.isEmpty) return const SizedBox.shrink();
