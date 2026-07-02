@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../AppRoutes.dart';
 import '../../theme/app_theme.dart';
 import '../../viewmodel/authVM.dart';
+import '../../app_layout.dart';
 
 enum ValidationReason {
   none,
@@ -115,7 +116,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final auth = context.read<AuthVM>();
     auth.clearError();
 
-    final success = await auth.register(email, password, password);
+    final success = await auth.register(name, email, password);
     if (!mounted) return;
 
     if (success) {
@@ -156,12 +157,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: Stack( children: [
+        const PersistentBackground(),
+        SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 24),
@@ -456,7 +459,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
         ),
-      ),
+      ),],),
     );
   }
 }
