@@ -76,6 +76,7 @@ flutter:
   
   assets:
     - assets/animations/new_intro.riv
+    - assets/animations/back6.riv
     - assets/animations/icon-set-1.riv
     - assets/book-images/
 
