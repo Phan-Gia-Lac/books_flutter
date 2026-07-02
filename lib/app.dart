@@ -11,6 +11,7 @@ import 'screens/main_pages/order_history_screen.dart';
 import 'screens/main_pages/checkout_screen.dart';
 import 'screens/auth/forgot_password.dart';
 import './AppRoutes.dart';
+import 'package:books_flutter/app_layout.dart';
 
 class ComicoApp extends StatelessWidget {
   const ComicoApp({super.key});
@@ -69,7 +70,7 @@ class ComicoApp extends StatelessWidget {
             );
         }
       },
-    ),
+      ),
     );
   }
 
