@@ -9,37 +9,113 @@ class AuthVM extends ChangeNotifier {
   String? _accessToken;
   bool _isLoading = false;
   String? _error;
+  String? _twoStepEmail;
 
   User? get user => _user;
   String? get accessToken => _accessToken;
   bool get isLoading => _isLoading;
   bool get isLoggedIn => _accessToken != null;
   String? get error => _error;
+  String? get twoStepEmail => _twoStepEmail;
 
   void clearError() {
     _error = null;
     notifyListeners();
   }
 
-  Future<bool> login(String email, String password) async {
+  // Enum or status to handle login stages
+  // Future<bool> login(String email, String password) async {
+  //   _isLoading = true;
+  //   _error = null;
+  //   notifyListeners();
+  //
+  //   try {
+  //     final result = await _api.login(email: email, password: password);
+  //     _user = result.user;
+  //     _accessToken = result.accessToken;
+  //     return true;
+  //   } on ApiException catch (e) {
+  //     _error = e.message;
+  //     return false;
+  //   } catch (e, stack) {
+  //     _error = 'Could not connect to server. Check that the backend is running.';
+  //     return false;
+  //   } finally {
+  //     _isLoading = false;
+  //     notifyListeners();
+  //   }
+  // }
+
+  /// Returns 'success', 'requires2FA', or 'failure'
+  Future<String> login(String email, String password) async {
+    _isLoading = true;
+    _error = null;
+    _twoStepEmail = null;
+    notifyListeners();
+
+    try {
+      final result = await _api.login(email: email, password: password);
+      
+      if (result.requires2FA) {
+        _twoStepEmail = result.email ?? email;
+        return 'requires2FA';
+      }
+
+      _user = result.user;
+      _accessToken = result.accessToken;
+      return 'success';
+    } on ApiException catch (e) {
+      _error = e.message;
+      return 'failure';
+    } catch (e) {
+      _error = 'Could not connect to server. Check that the backend is running.';
+      return 'failure';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> verifyOtp(String otp) async {
+    if (_twoStepEmail == null) {
+      _error = 'Session expired. Please login again.';
+      notifyListeners();
+      return false;
+    }
+
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final result = await _api.login(email: email, password: password);
+      final result = await _api.verifyOtp(email: _twoStepEmail!, otp: otp);
       _user = result.user;
       _accessToken = result.accessToken;
       return true;
     } on ApiException catch (e) {
       _error = e.message;
       return false;
-    } catch (e, stack) {
-      _error = 'Could not connect to server. Check that the backend is running.';
+    } catch (e) {
+      _error = 'Verification failed. Please try again.';
       return false;
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<bool> resendOtp() async {
+    if (_twoStepEmail == null) return false;
+
+    try {
+      await _api.resendOtp(email: _twoStepEmail!);
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      return false;
     }
   }
 

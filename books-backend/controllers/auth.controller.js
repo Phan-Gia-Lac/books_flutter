@@ -31,12 +31,41 @@ exports.login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
-        // Service sẽ kiểm tra mật khẩu và tạo ra JWT Token
-        const { user, accessToken } = await authService.authenticateUser(email, password);
+        // const { user, accessToken } = await authService.authenticateUser(email, password);
+        // Service sẽ kiểm tra mật khẩu, tạo OTP và gửi email
+        const result = await authService.authenticateUser(email, password);
 
         res.status(200).json({
             success: true,
-            message: 'Đăng nhập thành công',
+            message: 'Vui lòng kiểm tra email để lấy mã OTP',
+            data: result // { requires2FA: true, email: '...' }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Xác thực mã OTP và cấp Token
+ * POST /api/auth/verify-otp
+ */
+exports.verifyOtp = async (req, res, next) => {
+    try {
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({
+                success: false,
+                message: 'Vui lòng cung cấp email và mã OTP'
+            });
+        }
+
+        // Service sẽ kiểm tra OTP, nếu đúng thì cấp JWT Token
+        const { user, accessToken } = await authService.verifyOTPAndLogin(email, otp);
+
+        res.status(200).json({
+            success: true,
+            message: 'Đăng nhập và xác thực thành công',
             data: {
                 user,
                 accessToken // App di động sẽ lưu token này vào Flutter Secure Storage

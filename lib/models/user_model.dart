@@ -62,15 +62,29 @@ class User {
 }
 
 class LoginResult {
-  final User user;
-  final String accessToken;
+  final User? user;
+  final String? accessToken;
+  final bool requires2FA;
+  final String? email;
 
   const LoginResult({
-    required this.user,
-    required this.accessToken,
+    this.user,
+    this.accessToken,
+    this.requires2FA = false,
+    this.email,
   });
 
   factory LoginResult.fromJson(Map<String, dynamic> json) {
+    // Check if 2FA is required from backend response
+    final bool requires2FA = json['requires2FA'] == true || json['requires_2fa'] == true || json['data']?['requires2FA'] == true;
+    
+    if (requires2FA) {
+      return LoginResult(
+        requires2FA: true,
+        email: (json['email'] ?? json['data']?['email']) as String?,
+      );
+    }
+
     // Some Express architectures wrap the inner payload inside a 'data' block.
     // This dynamically tracks and grabs the correct root object structure.
     final userData = (json['user'] ?? json['data']?['user'] ?? json['data'] ?? json) as Map<String, dynamic>;
@@ -83,6 +97,7 @@ class LoginResult {
                     json['access_token'] ?? 
                     json['data']?['accessToken'] ?? 
                     json['data']?['access_token'] ?? '') as String,
+      requires2FA: false,
     );
   }
 }

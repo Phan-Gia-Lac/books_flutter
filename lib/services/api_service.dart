@@ -48,6 +48,49 @@ class ApiService {
     );
   }
 
+  Future<LoginResult> verifyOtp({
+    required String email,
+    required String otp,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/verify-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email.trim(),
+        'otp': otp.trim(),
+      }),
+    );
+
+    final Map<String, dynamic> body = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return LoginResult.fromJson(body);
+    }
+
+    throw ApiException(
+      body['message'] as String? ?? 'Verification failed (${response.statusCode})',
+    );
+  }
+
+  Future<bool> resendOtp({required String email}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/resend-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email.trim(),
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    }
+
+    final Map<String, dynamic> body = jsonDecode(response.body);
+    throw ApiException(
+      body['message'] as String? ?? 'Failed to resend OTP (${response.statusCode})',
+    );
+  }
+
   Future<bool> register({
   required String fullName,
   required String email,

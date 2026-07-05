@@ -10,6 +10,7 @@ import 'screens/intro_page.dart';
 import 'screens/main_pages/order_history_screen.dart';
 import 'screens/main_pages/checkout_screen.dart';
 import 'screens/auth/forgot_password.dart';
+import 'screens/auth/2step.dart';
 import './AppRoutes.dart';
 import 'package:books_flutter/app_layout.dart';
 
@@ -45,6 +46,7 @@ class ComicoApp extends StatelessWidget {
         AppRoutes.forgotPassword: (context) => const ForgotPasswordScreen(),
         AppRoutes.orderHistory: (context) => const OrderHistoryScreen(),
         AppRoutes.checkout: (context) => const CheckoutScreen(),
+        AppRoutes.twoStep: (context) => const TwoStepScreen(),
       },
 
       // Custom page transition for all routes
@@ -64,6 +66,8 @@ class ComicoApp extends StatelessWidget {
             return _buildRoute(const OrderHistoryScreen(), settings);
           case AppRoutes.checkout:
             return _buildRoute(const CheckoutScreen(), settings);
+          case AppRoutes.twoStep:
+            return _buildRoute(const TwoStepScreen(), settings);
           default:
             return MaterialPageRoute(
               builder: (context) => const IntroPage(),

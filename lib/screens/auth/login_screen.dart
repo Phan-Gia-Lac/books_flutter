@@ -37,11 +37,20 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = context.read<AuthVM>();
     auth.clearError();
 
-    final success = await auth.login(email, password);
+    // final success = await auth.login(email, password);
+    // if (!mounted) return;
+    //
+    // if (success) {
+    //   Navigator.pushReplacementNamed(context, AppRoutes.home);
+    // }
+    
+    final status = await auth.login(email, password);
     if (!mounted) return;
 
-    if (success) {
+    if (status == 'success') {
       Navigator.pushReplacementNamed(context, AppRoutes.home);
+    } else if (status == 'requires2FA') {
+      Navigator.pushNamed(context, AppRoutes.twoStep);
     }
   }
 
