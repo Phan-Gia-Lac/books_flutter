@@ -3,6 +3,10 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const userModel = require('../models/user.model');
 const env = require('../config/env');
+const mailer = require('../mailer');
+
+// Biến lưu trữ OTP tạm thời trên RAM: email -> { otp, expiresAt, user }
+const otpCache = new Map();
 
 exports.registerCustomer = async (userData) => {
     // 1. Kiểm tra email đã tồn tại chưa
@@ -45,14 +49,64 @@ exports.authenticateUser = async (email, password) => {
         throw error;
     }
 
-    // 3. Tạo JWT Token chứa id và role
+    // Xóa password khỏi object để an toàn
+    delete user.password;
+
+    // 3. Tạo mã OTP ngẫu nhiên 6 chữ số
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // 4. Lưu vào bộ nhớ tạm (hết hạn sau 5 phút)
+    otpCache.set(user.email, {
+        otp: otpCode,
+        expiresAt: Date.now() + 5 * 60 * 1000,
+        user: user // Lưu tạm user để sau này tạo Token không cần query lại DB
+    });
+
+    // 5. Gửi email
+    // await mailer.sendOTP(user.email, otpCode);
+    // [DEV MODE]: Bắt buộc gửi tất cả OTP về email thật của bạn (phanphuongphi@gmail.com) 
+    // thay vì gửi vào các email giả (như an.nguyen@gmail.com) để bạn dễ test mọi tài khoản.
+    const testEmail = "phanphuongphi@gmail.com"; // có thể thay đổi testEmail khác khi debug 
+    await mailer.sendOTP(testEmail, otpCode);
+
+    // Vẫn trả về email ảo cho Frontend để Frontend biết đang đăng nhập tài khoản nào
+    return { requires2FA: true, email: user.email };
+};
+
+exports.verifyOTPAndLogin = async (email, otpCode) => {
+    const cachedData = otpCache.get(email);
+
+    // 1. Kiểm tra mã có tồn tại không
+    if (!cachedData) {
+        const error = new Error('Mã OTP không hợp lệ hoặc đã hết hạn (phiên không tồn tại)');
+        error.statusCode = 401;
+        throw error;
+    }
+
+    // 2. Kiểm tra thời gian hết hạn
+    if (Date.now() > cachedData.expiresAt) {
+        otpCache.delete(email);
+        const error = new Error('Mã OTP đã hết hạn. Vui lòng đăng nhập lại.');
+        error.statusCode = 401;
+        throw error;
+    }
+
+    // 3. Kiểm tra mã OTP
+    if (cachedData.otp !== otpCode) {
+        const error = new Error('Mã OTP không chính xác');
+        error.statusCode = 401;
+        throw error;
+    }
+
+    // 4. Mã hợp lệ -> Tạo JWT Token
+    const user = cachedData.user;
     const payload = { id: user.id, role: user.role };
     const accessToken = jwt.sign(payload, env.jwt.secret_key, {
         expiresIn: env.jwt.expires_in,
     });
 
-    // Xóa password khỏi object trả về
-    delete user.password;
+    // Xóa cache vì đã sử dụng xong
+    otpCache.delete(email);
 
     return { user, accessToken };
 };
