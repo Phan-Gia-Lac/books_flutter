@@ -8,4 +8,5 @@ class AppRoutes {
   static const forgotPassword = '/forgot-password';
   static const orderHistory = '/order-history';
   static const checkout = '/checkout';
+  static const twoStep = '/two-step';
 }
