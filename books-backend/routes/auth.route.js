@@ -12,4 +12,7 @@ router.post('/register', authController.register);
 // API Đăng nhập
 router.post('/login', authController.login);
 
+// API Xác thực 2 bước (2FA)
+router.post('/verify-otp', authController.verifyOtp);
+
 module.exports = router;
