@@ -11,6 +11,9 @@ import 'screens/main_pages/order_history_screen.dart';
 import 'screens/main_pages/checkout_screen.dart';
 import 'screens/auth/forgot_password.dart';
 import 'screens/auth/2step.dart';
+import 'screens/admin/main.dart';
+import 'screens/admin/admin_product_screen.dart';
+import 'screens/admin/admin_pending_screen.dart';
 import './AppRoutes.dart';
 import 'package:books_flutter/app_layout.dart';
 
@@ -32,7 +35,7 @@ class ComicoApp extends StatelessWidget {
       theme: AppTheme.dark,
 
       // Initial screen
-      initialRoute: AppRoutes.intro,
+      initialRoute: AppRoutes.admin,
 
       // All app routes in one place
       routes: {
@@ -52,6 +55,12 @@ class ComicoApp extends StatelessWidget {
       // Custom page transition for all routes
       onGenerateRoute: (settings) {
         switch (settings.name) {
+          case AppRoutes.admin:
+            return _buildRoute(const AdminHomeScreen(), settings);
+          // case AppRoutes.admin_product:
+          //   return _buildRoute(const AdminProductScreen(), settings);
+          case AppRoutes.admin_pending:
+            return _buildRoute(const AdminPendingScreen(), settings);
           case AppRoutes.intro:
             return _buildRoute(const IntroPage(), settings);
           case AppRoutes.login:

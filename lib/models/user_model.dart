@@ -66,12 +66,14 @@ class LoginResult {
   final String? accessToken;
   final bool requires2FA;
   final String? email;
+  final String? role;
 
   const LoginResult({
     this.user,
     this.accessToken,
     this.requires2FA = false,
     this.email,
+    this.role,
   });
 
   factory LoginResult.fromJson(Map<String, dynamic> json) {
@@ -82,6 +84,7 @@ class LoginResult {
       return LoginResult(
         requires2FA: true,
         email: (json['email'] ?? json['data']?['email']) as String?,
+        role: (json['role'] ?? json['data']?['role']) as String?
       );
     }
 

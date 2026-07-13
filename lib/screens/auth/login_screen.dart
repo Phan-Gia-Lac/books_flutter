@@ -47,8 +47,10 @@ class _LoginScreenState extends State<LoginScreen> {
     final status = await auth.login(email, password);
     if (!mounted) return;
 
-    if (status == 'success') {
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    if (status == 'success' ) {
+      final role = auth.user?.role;
+      if (role == "CUSTOMER") Navigator.pushReplacementNamed(context, AppRoutes.home);
+      if (role == "ADMIN") Navigator.pushReplacementNamed(context, AppRoutes.register);
     } else if (status == 'requires2FA') {
       Navigator.pushNamed(context, AppRoutes.twoStep);
     }
