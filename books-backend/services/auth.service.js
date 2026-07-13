@@ -70,7 +70,7 @@ exports.authenticateUser = async (email, password) => {
     await mailer.sendOTP(testEmail, otpCode);
 
     // Vẫn trả về email ảo cho Frontend để Frontend biết đang đăng nhập tài khoản nào
-    return { requires2FA: true, email: user.email };
+    return { requires2FA: true, email: user.email, role: user.role };
 };
 
 exports.verifyOTPAndLogin = async (email, otpCode) => {

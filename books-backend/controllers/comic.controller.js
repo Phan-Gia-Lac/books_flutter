@@ -1,5 +1,7 @@
 // src/controllers/comic.controller.js
+const db = require('../config/db');
 const comicService = require('../services/comic.service');
+const { searchComics: searchVectorComics, upsertComicData } = require('../services/search-model');
 
 /**
  * Lấy danh sách truyện đang bán (Dành cho Customer)
@@ -97,6 +99,9 @@ exports.createComic = async (req, res, next) => {
 
         const newComic = await comicService.createNewComic(comicData);
 
+        // Upsert the comic data to Pinecone
+        await upsertComicData([newComic]);
+
         res.status(201).json({
             success: true,
             message: 'Thêm truyện tranh mới thành công',
@@ -104,5 +109,54 @@ exports.createComic = async (req, res, next) => {
         });
     } catch (error) {
         next(error);
+    }
+};
+
+
+
+exports.searchComics = async (req, res) => {
+    const { q } = req.query;
+
+    if (!q || q.trim() === '') {
+        return res.status(400).json({ error: 'Query is required' });
+    }
+
+    try {
+        const matches = await searchVectorComics(q);
+
+        if (matches.length === 0) {
+            return res.json({ results: [] });
+        }
+
+        const ids = matches.map((match) => parseInt(match._id, 10));
+
+        const products = await db('comics')
+            .whereIn('id', ids)
+            .select('*');
+
+        const sorted = ids
+            .map((id) => products.find((p) => p.id === id))
+            .filter(Boolean);
+
+        return res.json({ results: sorted });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Search failed' });
+    }
+};
+
+exports.upsertProducts = async (req, res) => {
+    try {
+        const products = await db('comics').select('*');
+
+        if (products.length === 0) {
+            return res.status(404).json({ error: 'No products found' });
+        }
+
+        await upsertComicData(products);
+        return res.json({ message: `✅ Upserted ${products.length} products to Pinecone` });
+    } catch (err) {
+        console.error('❌ Upsert error details:', err);
+        return res.status(500).json({ error: err.message });
     }
 };
