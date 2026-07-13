@@ -8,7 +8,8 @@
     "start": "node server.js",
     "db:migrate": "knex migrate:latest --knexfile db/knexfile.js",
     "db:rollback": "knex migrate:rollback --knexfile db/knexfile.js",
-    "db:seed": "knex seed:run --knexfile db/knexfile.js"
+    "db:seed": "knex seed:run --knexfile db/knexfile.js",
+    "upsert": "node scripts/upsertData.js"
   },
   "keywords": [],
   "author": "",

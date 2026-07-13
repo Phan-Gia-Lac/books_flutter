@@ -37,7 +37,7 @@ async function upsertComicData(comicData) {
         volume: comic.volume,
         price: comic.price,
         title: normalizeText(comic.title),
-        description: normalizeText(comic.description, normalizeText(comic.title)),
+        description: normalizeText(comic.description),
     }));
 
     await index.upsertRecords({ records });
