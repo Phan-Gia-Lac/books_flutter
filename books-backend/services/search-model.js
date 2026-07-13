@@ -49,7 +49,7 @@ async function searchComics(queryText) {
     const results = await index.searchRecords({
         query: {
             inputs: { text: queryText },
-            topK: 5,
+            topK: 50,
         },
         fields: ['title', 'description'],
     });
