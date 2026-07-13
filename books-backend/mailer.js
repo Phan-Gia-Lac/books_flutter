@@ -1,10 +1,11 @@
 const { createTransport } = require("nodemailer");
+const env = require("./config/env"); // Import cấu hình tập trung
 
 const transporter = createTransport({
     service: "gmail",
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: env.email.user, // Dùng từ file config
+        pass: env.email.pass,
     },
 });
 

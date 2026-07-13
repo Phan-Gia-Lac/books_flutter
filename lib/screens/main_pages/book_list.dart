@@ -85,6 +85,33 @@ class BookListScreen extends StatelessWidget {
                   top: Radius.circular(12),
                 ),
                 child: book.coverImage != null && book.coverImage!.isNotEmpty
+                    ? (book.coverImage!.startsWith('http')
+                        ? Image.network(
+                            book.coverImage!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Center(
+                                  child: Icon(
+                                    Icons.broken_image_rounded,
+                                    color: Colors.white54,
+                                    size: 36,
+                                  ),
+                                ),
+                          )
+                        : Image.asset(
+                            book.coverImage!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Center(
+                                  child: Icon(
+                                    Icons.book_rounded,
+                                    color: Colors.white54,
+                                    size: 36,
+                                  ),
+                                ),
+                          ))
+                    /*
+                    // OLD CODE: Only supported assets
                     ? Image.asset(
                         book.coverImage!,
                         fit: BoxFit.cover,
@@ -97,6 +124,7 @@ class BookListScreen extends StatelessWidget {
                               ),
                             ),
                       )
+                    */
                     : const Center(
                         child: Icon(
                           Icons.book_rounded,

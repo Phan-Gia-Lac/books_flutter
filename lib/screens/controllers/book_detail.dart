@@ -95,10 +95,25 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(11),
                   child: widget.book.coverImage != null && widget.book.coverImage!.isNotEmpty
+                      ? (widget.book.coverImage!.startsWith('http')
+                          ? Image.network(
+                              widget.book.coverImage!,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => const Center(
+                                child: Icon(Icons.broken_image_rounded, color: Colors.white24, size: 64),
+                              ),
+                            )
+                          : Image.asset(
+                              widget.book.coverImage!,
+                              fit: BoxFit.contain,
+                            ))
+                      /*
+                      // OLD CODE: Only supported assets
                       ? Image.asset(
                           widget.book.coverImage!,
                           fit: BoxFit.contain,
                         )
+                      */
                       : const Center(
                           child: Icon(Icons.book_rounded, color: Colors.white24, size: 64),
                         ),
@@ -206,6 +221,35 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                 child:
                     widget.book.coverImage != null &&
                         widget.book.coverImage!.isNotEmpty
+                    ? (widget.book.coverImage!.startsWith('http')
+                        ? Image.network(
+                            widget.book.coverImage!,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) => Center(
+                              child: Icon(
+                                Icons.broken_image_rounded,
+                                color: widget.book.coverColor.withValues(
+                                  alpha: 0.9,
+                                ),
+                                size: 80,
+                              ),
+                            ),
+                          )
+                        : Image.asset(
+                            widget.book.coverImage!,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) => Center(
+                              child: Icon(
+                                Icons.book_rounded,
+                                color: widget.book.coverColor.withValues(
+                                  alpha: 0.9,
+                                ),
+                                size: 80,
+                              ),
+                            ),
+                          ))
+                    /*
+                    // OLD CODE: Only supported assets
                     ? Image.asset(
                         widget.book.coverImage!,
                         fit: BoxFit.contain,
@@ -219,6 +263,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                           ),
                         ),
                       )
+                    */
                     : Center(
                         child: Icon(
                           Icons.book_rounded,

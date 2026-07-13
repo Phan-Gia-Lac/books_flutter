@@ -384,7 +384,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(4),
-                  child: item.book.coverImage != null ? Image.asset(item.book.coverImage!, fit: BoxFit.cover) : const Icon(Icons.book, size: 20),
+                  // child: item.book.coverImage != null ? Image.asset(item.book.coverImage!, fit: BoxFit.cover) : const Icon(Icons.book, size: 20),
+                  child: item.book.coverImage != null && item.book.coverImage!.isNotEmpty
+                      ? (item.book.coverImage!.startsWith('http')
+                          ? Image.network(
+                              item.book.coverImage!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 20, color: Colors.white38),
+                            )
+                          : Image.asset(
+                              item.book.coverImage!,
+                              fit: BoxFit.cover,
+                            ))
+                      /*
+                      // OLD CODE: Only supported assets
+                      ? Image.asset(item.book.coverImage!, fit: BoxFit.cover) 
+                      */
+                      : const Icon(Icons.book, size: 20, color: Colors.white38),
                 ),
               ),
               const SizedBox(width: 12),

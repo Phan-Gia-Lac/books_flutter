@@ -14,7 +14,8 @@ class OrderHistoryScreen extends StatefulWidget {
 
 class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   final _apiService = ApiService();
-  List<dynamic> _orders = [];
+  // List<dynamic> _orders = [];
+
   bool _isLoading = true;
   String? _error;
   String _selectedStatus = 'all';
@@ -45,8 +46,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
     try {
       final orders = await _apiService.fetchMyOrders(auth.accessToken!);
+      auth.updateMyOrders(orders);
       setState(() {
-        _orders = orders;
+        // _orders = orders;
         _isLoading = false;
       });
     } catch (e) {
@@ -58,8 +60,11 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   }
 
   List<dynamic> get _filteredOrders {
-    if (_selectedStatus == 'all') return _orders;
-    return _orders.where((o) => o['status'] == _selectedStatus).toList();
+    // if (_selectedStatus == 'all') return _orders;
+    // return _orders.where((o) => o['status'] == _selectedStatus).toList();
+    final auth = Provider.of<AuthVM>(context);
+    if (_selectedStatus == 'all') return auth.myOrders;
+    return auth.myOrders.where((o) => o['status'] == _selectedStatus).toList();
   }
 
   Color _getStatusColor(String status) {

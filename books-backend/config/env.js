@@ -19,6 +19,10 @@ const env = {
         secret_key: process.env.JWT_SECRET_KEY || 'comic_secret_default_key_2026',
         expires_in: process.env.JWT_EXPIRES_IN || '7d', // Token sống 7 ngày
     },
+    email: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
     payment: {
         vnpay: {
             tmn_code: process.env.VNPAY_TMN_CODE,

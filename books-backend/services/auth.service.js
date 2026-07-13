@@ -52,22 +52,31 @@ exports.authenticateUser = async (email, password) => {
     // Xóa password khỏi object để an toàn
     delete user.password;
 
-    // 3. Tạo mã OTP ngẫu nhiên 6 chữ số
+    // 3. Nếu là ADMIN thì không cần OTP, cấp token và đăng nhập luôn
+    if (user.role === 'ADMIN') {
+        const payload = { id: user.id, role: user.role };
+        const accessToken = jwt.sign(payload, env.jwt.secret_key, {
+            expiresIn: env.jwt.expires_in,
+        });
+        return { requires2FA: false, user, accessToken };
+    }
+
+    // 4. Tạo mã OTP ngẫu nhiên 6 chữ số
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // 4. Lưu vào bộ nhớ tạm (hết hạn sau 5 phút)
+    // 5. Lưu vào bộ nhớ tạm (hết hạn sau 5 phút)
     otpCache.set(user.email, {
         otp: otpCode,
         expiresAt: Date.now() + 5 * 60 * 1000,
         user: user // Lưu tạm user để sau này tạo Token không cần query lại DB
     });
 
-    // 5. Gửi email
+    // 6. Gửi email
+    await mailer.sendOTP(user.email, otpCode);
     // await mailer.sendOTP(user.email, otpCode);
     // [DEV MODE]: Bắt buộc gửi tất cả OTP về email thật của bạn (phanphuongphi@gmail.com) 
     // thay vì gửi vào các email giả (như an.nguyen@gmail.com) để bạn dễ test mọi tài khoản.
-    const testEmail = "phanphuongphi@gmail.com"; // có thể thay đổi testEmail khác khi debug 
-    await mailer.sendOTP(testEmail, otpCode);
+    // const testEmail = "phanphuongphi@gmail.com"; // có thể thay đổi testEmail khác khi debug  
 
     // Vẫn trả về email ảo cho Frontend để Frontend biết đang đăng nhập tài khoản nào
     return { requires2FA: true, email: user.email, role: user.role };

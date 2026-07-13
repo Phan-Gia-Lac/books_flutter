@@ -52,7 +52,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (role == "CUSTOMER")
         Navigator.pushReplacementNamed(context, AppRoutes.home);
       if (role == "ADMIN")
-        Navigator.pushReplacementNamed(context, AppRoutes.register);
+        // Navigator.pushReplacementNamed(context, AppRoutes.register);
+        Navigator.pushReplacementNamed(context, AppRoutes.admin);
     } else if (status == 'requires2FA') {
       Navigator.pushNamed(context, AppRoutes.twoStep);
     }

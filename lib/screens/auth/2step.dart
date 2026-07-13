@@ -37,7 +37,12 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
     if (!mounted) return;
 
     if (success) {
-      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
+      final role = auth.user?.role;
+      if (role == 'ADMIN') {
+        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.admin, (route) => false);
+      } else {
+        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
+      }
     }
   }
 

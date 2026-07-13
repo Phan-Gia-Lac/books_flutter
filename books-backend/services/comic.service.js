@@ -43,3 +43,17 @@ exports.getComicDetail = async (id) => {
 exports.createNewComic = async (comicData) => {
     return comicModel.createComic(comicData);
 };
+
+/**
+ * Cập nhật truyện (STAFF & ADMIN)
+ */
+exports.updateComic = async (id, comicData) => {
+    return comicModel.updateComic(id, comicData);
+};
+
+/**
+ * Xóa truyện (STAFF & ADMIN)
+ */
+exports.deleteComic = async (id) => {
+    return comicModel.deleteComic(id);
+};

@@ -2,6 +2,7 @@
 const db = require('../config/db');
 const comicService = require('../services/comic.service');
 const { searchComics: searchVectorComics, upsertComicData } = require('../services/search-model');
+const io = require('../socket');
 
 /**
  * Lấy danh sách truyện đang bán (Dành cho Customer)
@@ -102,6 +103,13 @@ exports.createComic = async (req, res, next) => {
         // Upsert the comic data to Pinecone
         await upsertComicData([newComic]);
 
+        // Real-time: Notify all clients that a new comic has been created
+        try {
+            io.getIO().emit('COMIC_CREATED', newComic);
+        } catch (socketErr) {
+            console.error('Socket emission failed:', socketErr);
+        }
+
         res.status(201).json({
             success: true,
             message: 'Thêm truyện tranh mới thành công',
@@ -143,4 +151,53 @@ exports.searchComics = async (req, res) => {
         console.error(err);
         return res.status(500).json({ error: 'Search failed' });
     }
+};
+
+exports.upsertProducts = async (req, res) => {
+    try {
+        const products = await db('comics').select('*');
+
+        if (products.length === 0) {
+            return res.status(404).json({ error: 'No products found' });
+        }
+
+        await upsertComicData(products);
+        return res.json({ message: `✅ Upserted ${products.length} products to Pinecone` });
+    } catch (err) {
+        console.error('❌ Upsert error details:', err);
+        return res.status(500).json({ error: err.message });
+    }
+};
+
+exports.updateComic = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const updatedComic = await comicService.updateComic(id, req.body);
+
+        // Real-time: Notify all clients that a comic has been updated
+        try {
+            io.getIO().emit('COMIC_UPDATED', updatedComic);
+        } catch (socketErr) {
+            console.error('Socket emission failed:', socketErr);
+        }
+
+        res.status(200).json({ success: true, message: 'Updated successfully', data: updatedComic });
+    } catch (error) { next(error); }
+};
+
+exports.deleteComic = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await comicService.deleteComic(id);
+
+        // Real-time: Notify all clients that a comic has been deleted
+        try {
+            // Using parseInt to ensure the ID is consistent (number vs string)
+            io.getIO().emit('COMIC_DELETED', parseInt(id, 10));
+        } catch (socketErr) {
+            console.error('Socket emission failed:', socketErr);
+        }
+
+        res.status(200).json({ success: true, message: 'Deleted successfully' });
+    } catch (error) { next(error); }
 };

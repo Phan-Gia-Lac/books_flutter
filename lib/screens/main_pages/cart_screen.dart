@@ -126,6 +126,31 @@ class _CartItemTile extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: book.coverImage != null && book.coverImage!.isNotEmpty
+                  ? (book.coverImage!.startsWith('http')
+                      ? Image.network(
+                          book.coverImage!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Center(
+                            child: Icon(
+                              Icons.broken_image_rounded,
+                              color: book.coverColor.withValues(alpha: 0.85),
+                              size: 28,
+                            ),
+                          ),
+                        )
+                      : Image.asset(
+                          book.coverImage!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Center(
+                            child: Icon(
+                              Icons.book_rounded,
+                              color: book.coverColor.withValues(alpha: 0.85),
+                              size: 28,
+                            ),
+                          ),
+                        ))
+                  /*
+                  // OLD CODE: Only supported assets
                   ? Image.asset(
                       book.coverImage!,
                       fit: BoxFit.cover,
@@ -137,6 +162,7 @@ class _CartItemTile extends StatelessWidget {
                         ),
                       ),
                     )
+                  */
                   : Center(
                       child: Icon(
                         Icons.book_rounded,

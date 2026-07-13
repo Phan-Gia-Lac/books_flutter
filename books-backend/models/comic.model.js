@@ -124,4 +124,20 @@ exports.decrementStock = async (id, quantity, trx = db) => {
 
 exports.getAllComics = async () => {
     return await db(TABLE_NAME).select('*');
-}
+};
+
+exports.updateComic = async (id, comicData) => {
+    const [updatedComic] = await db(TABLE_NAME)
+        .where({ id })
+        .update(comicData)
+        .returning('*');
+    return updatedComic;
+};
+
+exports.deleteComic = async (id) => {
+    const [deletedComic] = await db(TABLE_NAME)
+        .where({ id })
+        .update({ is_deleted: true })
+        .returning('*');
+    return deletedComic;
+};

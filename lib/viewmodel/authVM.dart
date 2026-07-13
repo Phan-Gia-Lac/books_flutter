@@ -149,4 +149,31 @@ class AuthVM extends ChangeNotifier {
       return false;
     }
   }
+
+  // ── Real-time Handlers ───────────────────────────────────────────────────
+
+  List<dynamic> _myOrders = [];
+  List<dynamic> get myOrders => _myOrders;
+
+  void updateMyOrders(List<dynamic> orders) {
+    _myOrders = orders;
+    notifyListeners();
+  }
+
+  void onOrderCreated(dynamic order) {
+    // If the order belongs to the current user, add it to their history
+    if (_user != null && order['customer_id'] == _user!.id) {
+      _myOrders.insert(0, order);
+      notifyListeners();
+    }
+  }
+
+  void onOrderStatusUpdated(dynamic order) {
+    // Update the status in the local list if it's the user's order
+    int index = _myOrders.indexWhere((o) => o['id'] == order['id']);
+    if (index != -1) {
+      _myOrders[index] = order;
+      notifyListeners();
+    }
+  }
 }
