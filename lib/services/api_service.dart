@@ -336,4 +336,123 @@ class ApiService {
       throw ApiException(body['message'] as String? ?? 'Failed to submit review');
     }
   }
+  Future<Book> createComic({
+  required String title,
+  required double price,
+  required String description,
+  required int categoryId,
+  required int authorId,
+  required String token,
+}) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/comics'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode({
+      'title': title.trim(),
+      'price': price,
+      'description': description.trim(),
+      'category_id': categoryId,
+      'author_id': authorId,
+    }),
+  );
+
+  final Map<String, dynamic> body = jsonDecode(response.body);
+
+  if (response.statusCode == 200 || response.statusCode == 201) {
+    return Book.fromJson(body['data'] ?? body);
+  }
+
+  throw ApiException(
+    body['message'] as String? ?? 'Failed to create comic (${response.statusCode})',
+  );
+}
+
+Future<Book> updateComic({
+  required int id,
+  required String title,
+  required double price,
+  required String description,
+  required String token,
+}) async {
+  final response = await http.put(
+    Uri.parse('$baseUrl/comics/$id'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode({
+      'title': title.trim(),
+      'price': price,
+      'description': description.trim(),
+    }),
+  );
+
+  final Map<String, dynamic> body = jsonDecode(response.body);
+
+  if (response.statusCode == 200) {
+    return Book.fromJson(body['data'] ?? body);
+  }
+
+  throw ApiException(
+    body['message'] as String? ?? 'Failed to update comic (${response.statusCode})',
+  );
+}
+
+Future<void> deleteComic({
+  required int id,
+  required String token,
+}) async {
+  final response = await http.delete(
+    Uri.parse('$baseUrl/comics/$id'),
+    headers: {'Authorization': 'Bearer $token'},
+  );
+
+  if (response.statusCode == 200 || response.statusCode == 204) {
+    return;
+  }
+
+  final Map<String, dynamic> body = jsonDecode(response.body);
+  throw ApiException(
+    body['message'] as String? ?? 'Failed to delete comic (${response.statusCode})',
+  );
+}
+
+Future<List<dynamic>> fetchPendingOrders(String token) async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/orders?status=pending'),
+    headers: {'Authorization': 'Bearer $token'},
+  );
+
+  final Map<String, dynamic> body = jsonDecode(response.body);
+
+  if (response.statusCode == 200) {
+    return body['data'] as List<dynamic>;
+  }
+
+  throw ApiException(
+    body['message'] as String? ?? 'Failed to load pending orders (${response.statusCode})',
+  );
+}
+
+Future<void> approveOrder({
+  required int orderId,
+  required String token,
+}) async {
+  final response = await http.patch(
+    Uri.parse('$baseUrl/orders/$orderId/approve'),
+    headers: {'Authorization': 'Bearer $token'},
+  );
+
+  if (response.statusCode == 200) {
+    return;
+  }
+
+  final Map<String, dynamic> body = jsonDecode(response.body);
+  throw ApiException(
+    body['message'] as String? ?? 'Failed to approve order (${response.statusCode})',
+  );
+}
 }

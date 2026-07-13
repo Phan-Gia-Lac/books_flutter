@@ -121,3 +121,7 @@ exports.decrementStock = async (id, quantity, trx = db) => {
         .decrement('stock_quantity', quantity)
         .returning(['id', 'stock_quantity']);
 };
+
+exports.getAllComics = async () => {
+    return await db(TABLE_NAME).select('*');
+}

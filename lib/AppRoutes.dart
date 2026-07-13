@@ -9,4 +9,7 @@ class AppRoutes {
   static const orderHistory = '/order-history';
   static const checkout = '/checkout';
   static const twoStep = '/two-step';
+  static const admin = '/admin';
+  static const admin_product = '/product';
+  static const admin_pending = '/pending';
 }
