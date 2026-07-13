@@ -32,6 +32,7 @@ exports.findActiveComics = async ({
     author_id = null,
     publisher_id = null,
     search = '',
+    searchIds = null,
     min_price = null,
     max_price = null,
     min_rating = null,
@@ -40,6 +41,10 @@ exports.findActiveComics = async ({
     let query = db(TABLE_NAME)
         .where(`${TABLE_NAME}.status`, 'active')
         .andWhere(`${TABLE_NAME}.is_deleted`, false);
+
+    if (searchIds) {
+        query = query.whereIn(`${TABLE_NAME}.id`, searchIds);
+    }
 
     if (category_id) {
         query = query.where(`${TABLE_NAME}.category_id`, category_id);
@@ -50,7 +55,7 @@ exports.findActiveComics = async ({
     if (publisher_id) {
         query = query.where(`${TABLE_NAME}.publisher_id`, publisher_id);
     }
-    if (search) {
+    if (search && !searchIds) {
         query = query.where(`${TABLE_NAME}.title`, 'ilike', `%${search}%`);
     }
     if (min_price !== null && min_price !== undefined) {
@@ -140,4 +145,4 @@ exports.deleteComic = async (id) => {
         .update({ is_deleted: true })
         .returning('*');
     return deletedComic;
-};
+};
