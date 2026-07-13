@@ -105,7 +105,7 @@ class AdminProfileScreen extends StatelessWidget {
                 icon: const Icon(Icons.logout_rounded),
                 label: const Text('Sign Out'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent.withOpacity(0.1),
+                  backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
                   foregroundColor: Colors.redAccent,
                   side: const BorderSide(color: Colors.redAccent, width: 1),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
