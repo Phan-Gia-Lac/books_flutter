@@ -16,6 +16,7 @@ import 'screens/auth/2step.dart';
 import 'screens/admin/main.dart';
 import 'screens/admin/admin_product_screen.dart';
 import 'screens/admin/admin_pending_screen.dart';
+import 'screens/admin/admin_profile_screen.dart';
 import './AppRoutes.dart';
 import 'package:books_flutter/app_layout.dart';
 
@@ -99,6 +100,8 @@ class _ComicoAppState extends State<ComicoApp> {
             //   return _buildRoute(const AdminProductScreen(), settings);
             case AppRoutes.admin_pending:
               return _buildRoute(const AdminPendingScreen(), settings);
+            case AppRoutes.admin_profile:
+              return _buildRoute(const AdminProfileScreen(), settings);
             case AppRoutes.intro:
               return _buildRoute(const IntroPage(), settings);
             case AppRoutes.login:

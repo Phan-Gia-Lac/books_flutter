@@ -12,4 +12,5 @@ class AppRoutes {
   static const admin = '/admin';
   static const admin_product = '/product';
   static const admin_pending = '/pending';
+  static const admin_profile = '/admin-profile';
 }
