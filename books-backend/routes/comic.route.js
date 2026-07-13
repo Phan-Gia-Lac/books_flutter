@@ -8,7 +8,6 @@ const role = require('../middlewares/role.middleware');
 
 // [PUBLIC] Khách hàng xem danh sách và chi tiết truyện
 router.get('/', comicController.getAllComics);
-router.post('/search', comicController.searchComics);
 router.get('/:id', comicController.getComicById);
 
 // Gắn route review vào truyện

@@ -24,5 +24,8 @@ npm run db:migrate
 echo "==> Running database seeds..."
 npm run db:seed
 
+echo "==> Upserting Data ... "
+npm run upsert
+
 echo "==> Starting API server..."
 exec npm run start

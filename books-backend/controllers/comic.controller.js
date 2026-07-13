@@ -144,19 +144,3 @@ exports.searchComics = async (req, res) => {
         return res.status(500).json({ error: 'Search failed' });
     }
 };
-
-exports.upsertProducts = async (req, res) => {
-    try {
-        const products = await db('comics').select('*');
-
-        if (products.length === 0) {
-            return res.status(404).json({ error: 'No products found' });
-        }
-
-        await upsertComicData(products);
-        return res.json({ message: `✅ Upserted ${products.length} products to Pinecone` });
-    } catch (err) {
-        console.error('❌ Upsert error details:', err);
-        return res.status(500).json({ error: err.message });
-    }
-};

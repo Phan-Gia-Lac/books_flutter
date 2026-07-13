@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 
-const comicController = require('../controllers/comic.controller');
+const { searchComics } = require('../controllers/comic.controller')
 const authRoutes = require('./auth.route');
 const comicRoutes = require('./comic.route');
 const orderRoutes = require('./order.route');
@@ -12,7 +12,7 @@ const publisherRoutes = require('./publisher.route');
 const categoryRoutes = require('./category.route');
 
 // Khai báo tiền tố cho từng nhóm route
-router.get('/upsert', comicController.upsertProducts);
+router.get('/search', searchComics);
 router.use('/auth', authRoutes);       // Các API bắt đầu bằng /api/auth
 router.use('/comics', comicRoutes);    // Các API bắt đầu bằng /api/comics
 router.use('/orders', orderRoutes);    // Các API bắt đầu bằng /api/orders
