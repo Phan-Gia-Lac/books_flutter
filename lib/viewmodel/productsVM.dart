@@ -98,19 +98,36 @@ class ProductsVM extends ChangeNotifier {
     double? minRating,
   }) async {
     _isSearching = true;
+    _error = null;
     notifyListeners();
 
     try {
-      _searchResults = await _apiService.fetchComics(
-        search: query,
-        categoryId: categoryId,
-        authorId: authorId,
-        publisherId: publisherId,
-        sortBy: sortBy,
-        minPrice: minPrice,
-        maxPrice: maxPrice,
-        minRating: minRating,
-      );
+      final hasTextQuery = (query ?? '').trim().isNotEmpty;
+
+      if (hasTextQuery) {
+        _searchResults = await _apiService.searchComics(
+          query: query!,
+          categoryId: categoryId,
+          authorId: authorId,
+          publisherId: publisherId,
+          sortBy: sortBy,
+          minPrice: minPrice,
+          maxPrice: maxPrice,
+          minRating: minRating,
+        );
+      } else {
+        _searchResults = await _apiService.fetchComics(
+          search: query,
+          categoryId: categoryId,
+          authorId: authorId,
+          publisherId: publisherId,
+          sortBy: sortBy,
+          minPrice: minPrice,
+          maxPrice: maxPrice,
+          minRating: minRating,
+        );
+      }
+
       _isSearching = false;
       notifyListeners();
     } catch (e) {

@@ -189,6 +189,68 @@ class ApiService {
     }
   }
 
+  Future<List<Book>> searchComics({
+    required String query,
+    int? categoryId,
+    int? authorId,
+    int? publisherId,
+    String? sortBy,
+    double? minPrice,
+    double? maxPrice,
+    double? minRating,
+    int? limit,
+  }) async {
+    try {
+      final trimmedQuery = query.trim();
+      if (trimmedQuery.isEmpty) {
+        return fetchComics(
+          categoryId: categoryId,
+          authorId: authorId,
+          publisherId: publisherId,
+          sortBy: sortBy,
+          minPrice: minPrice,
+          maxPrice: maxPrice,
+          minRating: minRating,
+          limit: limit,
+        );
+      }
+
+      final queryParams = <String, String>{'q': trimmedQuery};
+      if (categoryId != null) queryParams['category'] = categoryId.toString();
+      if (authorId != null) queryParams['author'] = authorId.toString();
+      if (publisherId != null) queryParams['publisher'] = publisherId.toString();
+      if (sortBy != null) queryParams['sort_by'] = sortBy;
+      if (minPrice != null) queryParams['min_price'] = minPrice.toString();
+      if (maxPrice != null) queryParams['max_price'] = maxPrice.toString();
+      if (minRating != null) queryParams['min_rating'] = minRating.toString();
+      if (limit != null) queryParams['limit'] = limit.toString();
+
+      final uri = Uri.parse('$baseUrl/search').replace(queryParameters: queryParams);
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> body = jsonDecode(response.body);
+        if (body['results'] is List) {
+          final List<dynamic> data = body['results'];
+          return data.map((json) => Book.fromJson(json)).toList();
+        }
+
+        if (body['success'] == true) {
+          final List<dynamic> data = body['data'];
+          return data.map((json) => Book.fromJson(json)).toList();
+        }
+
+        throw ApiException(body['message'] as String? ?? 'Failed to search comics');
+      }
+
+      throw ApiException('Failed to connect to backend: ${response.statusCode}');
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error searching comics: $e');
+    }
+  }
+
   Future<List<Category>> fetchCategories() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/categories'));
