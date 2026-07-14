@@ -1,5 +1,6 @@
 // src/controllers/order.controller.js
 const orderService = require('../services/order.service');
+const io = require('../socket');
 
 /**
  * 🛒 [CUSTOMER] Tạo đơn hàng mới
@@ -16,6 +17,13 @@ exports.createOrder = async (req, res, next) => {
             shipping_address,
             payment_method
         });
+
+        // Real-time: Notify Admins that a new order has been placed
+        try {
+            io.getIO().emit('ORDER_CREATED', newOrder);
+        } catch (socketErr) {
+            console.error('Socket emission failed (ORDER_CREATED):', socketErr);
+        }
 
         res.status(201).json({
             success: true,
@@ -59,10 +67,31 @@ exports.updateOrderStatus = async (req, res, next) => {
 
         const updatedOrder = await orderService.changeOrderStatus(id, status, staffId);
 
+        // Real-time: Notify the Customer that their order status has changed
+        try {
+            // We can emit to everyone, and the client will check if it's their order
+            io.getIO().emit('ORDER_STATUS_UPDATED', updatedOrder);
+        } catch (socketErr) {
+            console.error('Socket emission failed (ORDER_STATUS_UPDATED):', socketErr);
+        }
+
         res.status(200).json({
             success: true,
             message: `Đã cập nhật trạng thái đơn hàng thành ${status}`,
             data: updatedOrder
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.getAllOrders = async (req, res, next) => {
+    try {
+        const { status } = req.query; // Support filtering by status if needed
+        const orders = await orderService.getAllOrders(status);
+        res.status(200).json({
+            success: true,
+            data: orders
         });
     } catch (error) {
         next(error);

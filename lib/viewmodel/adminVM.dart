@@ -49,6 +49,7 @@ class AdminVM extends ChangeNotifier {
     required int categoryId,
     required int authorId,
     required String token,
+    String? coverImage, // Added coverImage
   }) async {
     _error = null;
     try {
@@ -59,9 +60,14 @@ class AdminVM extends ChangeNotifier {
         categoryId: categoryId,
         authorId: authorId,
         token: token,
+        coverImage: coverImage, // Passed coverImage
       );
+      /*
+      // OLD CODE: Manually inserting into local list
+      // We now rely on Socket.IO events (onComicCreated) to update the list for everyone
       _books.insert(0, book);
       notifyListeners();
+      */
       return true;
     } on ApiException catch (e) {
       _error = e.message;
@@ -80,6 +86,7 @@ class AdminVM extends ChangeNotifier {
     required double price,
     required String description,
     required String token,
+    String? coverImage, // Added coverImage
   }) async {
     _error = null;
     try {
@@ -89,10 +96,15 @@ class AdminVM extends ChangeNotifier {
         price: price,
         description: description,
         token: token,
+        coverImage: coverImage, // Passed coverImage
       );
+      /*
+      // OLD CODE: Manually updating local list
+      // We now rely on Socket.IO events (onComicUpdated) to update the list for everyone
       final index = _books.indexWhere((b) => b.id == id);
       if (index != -1) _books[index] = updated;
       notifyListeners();
+      */
       return true;
     } on ApiException catch (e) {
       _error = e.message;
@@ -109,8 +121,12 @@ class AdminVM extends ChangeNotifier {
     _error = null;
     try {
       await _api.deleteComic(id: id, token: token);
+      /*
+      // OLD CODE: Manually removing from local list
+      // We now rely on Socket.IO events (onComicDeleted) to update the list for everyone
       _books.removeWhere((b) => b.id == id);
       notifyListeners();
+      */
       return true;
     } on ApiException catch (e) {
       _error = e.message;
@@ -158,5 +174,39 @@ class AdminVM extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  // ── Real-time Handlers ───────────────────────────────────────────────────
+
+  void onComicCreated(Book book) {
+    _books.insert(0, book);
+    notifyListeners();
+  }
+
+  void onComicUpdated(Book book) {
+    final index = _books.indexWhere((b) => b.id == book.id);
+    if (index != -1) {
+      _books[index] = book;
+      notifyListeners();
+    }
+  }
+
+  void onComicDeleted(int id) {
+    _books.removeWhere((b) => b.id == id);
+    notifyListeners();
+  }
+
+  void onOrderCreated(dynamic order) {
+    // Only add to pending if the status is actually pending
+    if (order['status'] == 'pending') {
+      _pendingOrders.insert(0, order);
+      notifyListeners();
+    }
+  }
+
+  void onOrderStatusUpdated(dynamic order) {
+    // If it's no longer pending, remove it from the admin's pending list
+    _pendingOrders.removeWhere((o) => o['id'] == order['id']);
+    notifyListeners();
   }
 }

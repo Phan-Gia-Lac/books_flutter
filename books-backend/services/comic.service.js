@@ -11,6 +11,7 @@ exports.getComicsList = async ({
     authorId,
     publisherId,
     search,
+    searchIds,
     minPrice,
     maxPrice,
     minRating,
@@ -23,6 +24,7 @@ exports.getComicsList = async ({
         author_id: authorId,
         publisher_id: publisherId,
         search,
+        searchIds,
         min_price: minPrice,
         max_price: maxPrice,
         min_rating: minRating,
@@ -42,4 +44,18 @@ exports.getComicDetail = async (id) => {
  */
 exports.createNewComic = async (comicData) => {
     return comicModel.createComic(comicData);
+};
+
+/**
+ * Cập nhật truyện (STAFF & ADMIN)
+ */
+exports.updateComic = async (id, comicData) => {
+    return comicModel.updateComic(id, comicData);
+};
+
+/**
+ * Xóa truyện (STAFF & ADMIN)
+ */
+exports.deleteComic = async (id) => {
+    return comicModel.deleteComic(id);
 };

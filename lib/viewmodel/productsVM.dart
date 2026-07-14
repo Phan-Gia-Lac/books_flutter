@@ -180,4 +180,50 @@ class ProductsVM extends ChangeNotifier {
     _cart.clear();
     notifyListeners();
   }
+
+  // ── Real-time Handlers ───────────────────────────────────────────────────
+
+  void onComicCreated(Book book) {
+    // Add to lists if they are already loaded
+    if (_featuredBooks.isNotEmpty) {
+      _featuredBooks.insert(0, book);
+    }
+    if (_popularBooks.isNotEmpty) {
+      _popularBooks.add(book);
+    }
+    notifyListeners();
+  }
+
+  void onComicUpdated(Book book) {
+    // Update in all lists
+    int featIdx = _featuredBooks.indexWhere((b) => b.id == book.id);
+    if (featIdx != -1) _featuredBooks[featIdx] = book;
+
+    int popIdx = _popularBooks.indexWhere((b) => b.id == book.id);
+    if (popIdx != -1) _popularBooks[popIdx] = book;
+
+    int searchIdx = _searchResults.indexWhere((b) => b.id == book.id);
+    if (searchIdx != -1) _searchResults[searchIdx] = book;
+
+    // Update in cart
+    int cartIdx = _cart.indexWhere((item) => item.book.id == book.id);
+    if (cartIdx != -1) {
+      // Create new cart item with updated book but same quantity
+      _cart[cartIdx] = CartItem(book: book, quantity: _cart[cartIdx].quantity);
+    }
+
+    notifyListeners();
+  }
+
+  void onComicDeleted(int id) {
+    // Remove from all lists
+    _featuredBooks.removeWhere((b) => b.id == id);
+    _popularBooks.removeWhere((b) => b.id == id);
+    _searchResults.removeWhere((b) => b.id == id);
+
+    // Remove from cart if present
+    _cart.removeWhere((item) => item.book.id == id);
+
+    notifyListeners();
+  }
 }

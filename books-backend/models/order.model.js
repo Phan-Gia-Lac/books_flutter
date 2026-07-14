@@ -80,3 +80,24 @@ exports.createOrder = async (orderData, items, trx) => {
 
     return newOrder;
 };
+
+
+exports.findAll = async (status) => {
+    let query = db(ORDERS_TABLE).orderBy('order_date', 'desc');
+    if (status) query = query.where({ status });
+    const orders = await query;
+    
+    // Nạp chi tiết sản phẩm cho từng đơn hàng
+    for (let order of orders) {
+        order.items = await db(ITEMS_TABLE)
+            .join('comics', `${ITEMS_TABLE}.comic_id`, 'comics.id')
+            .select(
+                `${ITEMS_TABLE}.*`,
+                'comics.title as comic_title',
+                'comics.cover_image as comic_cover_image'
+            )
+            .where({ order_id: order.id });
+    }
+
+    return orders;
+};

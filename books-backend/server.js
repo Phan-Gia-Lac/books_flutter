@@ -1,6 +1,7 @@
 // src/server.js
 const app = require('./app');
 const env = require('./config/env');
+const socket = require('./socket');
 
 const PORT = env.app.port || 3000;
 
@@ -11,6 +12,9 @@ const server = app.listen(PORT, () => {
     console.log(`   API Endpoint: http://localhost:${PORT}/api`);
     console.log(`=========================================`);
 });
+
+// Initialize Socket.io
+socket.init(server);
 
 // CHANGE THIS: Don't kill the server instantly, just log it out!
 process.on('unhandledRejection', (err) => {

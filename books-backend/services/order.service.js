@@ -60,7 +60,7 @@ exports.placeOrder = async (customerId, { items, shipping_address, payment_metho
         };
 
         const newOrder = await orderModel.createOrder(orderData, processedItems, trx);
-        
+
         // Trả về order kèm items
         newOrder.items = processedItems;
         return newOrder;
@@ -95,4 +95,8 @@ exports.changeOrderStatus = async (orderId, status, staffId) => {
     }
 
     return orderModel.updateStatus(orderId, status, staffId);
+};
+
+exports.getAllOrders = async (status) => {
+    return orderModel.findAll(status);
 };

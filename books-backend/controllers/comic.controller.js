@@ -2,6 +2,7 @@
 const db = require('../config/db');
 const comicService = require('../services/comic.service');
 const { searchComics: searchVectorComics, upsertComicData } = require('../services/search-model');
+const io = require('../socket');
 
 /**
  * Lấy danh sách truyện đang bán (Dành cho Customer)
@@ -102,6 +103,13 @@ exports.createComic = async (req, res, next) => {
         // Upsert the comic data to Pinecone
         await upsertComicData([newComic]);
 
+        // Real-time: Notify all clients that a new comic has been created
+        try {
+            io.getIO().emit('COMIC_CREATED', newComic);
+        } catch (socketErr) {
+            console.error('Socket emission failed:', socketErr);
+        }
+
         res.status(201).json({
             success: true,
             message: 'Thêm truyện tranh mới thành công',
@@ -122,25 +130,122 @@ exports.searchComics = async (req, res) => {
     }
 
     try {
+        const page = req.query.page && !isNaN(parseInt(req.query.page)) ? parseInt(req.query.page) : 1;
+        const limit = req.query.limit && !isNaN(parseInt(req.query.limit)) ? parseInt(req.query.limit) : 10;
+        const categoryId = req.query.category && !isNaN(parseInt(req.query.category)) ? parseInt(req.query.category) : null;
+        const authorId = req.query.author && !isNaN(parseInt(req.query.author)) ? parseInt(req.query.author) : null;
+        const publisherId = req.query.publisher && !isNaN(parseInt(req.query.publisher)) ? parseInt(req.query.publisher) : null;
+        const minPrice = req.query.min_price && !isNaN(parseInt(req.query.min_price)) ? parseInt(req.query.min_price) : null;
+        const maxPrice = req.query.max_price && !isNaN(parseInt(req.query.max_price)) ? parseInt(req.query.max_price) : null;
+        const minRating = req.query.min_rating && !isNaN(parseFloat(req.query.min_rating)) ? parseFloat(req.query.min_rating) : null;
+        const sortBy = req.query.sort_by || 'newest';
+
+        const offset = (page - 1) * limit;
+
         const matches = await searchVectorComics(q);
 
-        if (matches.length === 0) {
-            return res.json({ results: [] });
+        let searchIds = null;
+        if (matches && matches.length > 0) {
+            searchIds = matches.map((match) => parseInt(match._id, 10));
+        } else {
+            // If no vector matches, we can return empty or fallback to SQL
+            return res.status(200).json({
+                success: true,
+                message: 'Không tìm thấy truyện phù hợp',
+                data: [],
+                meta: {
+                    current_page: page,
+                    items_per_page: limit,
+                    total_items: 0,
+                    total_pages: 0
+                }
+            });
         }
 
-        const ids = matches.map((match) => parseInt(match._id, 10));
+        const { comics, totalItems } = await comicService.getComicsList({
+            limit,
+            offset,
+            categoryId,
+            authorId,
+            publisherId,
+            search: q,
+            searchIds,
+            minPrice,
+            maxPrice,
+            minRating,
+            sortBy
+        });
 
-        const products = await db('comics')
-            .whereIn('id', ids)
-            .select('*');
+        // Ensure vector search order is preserved if no other sort is applied
+        let finalComics = comics;
+        if (sortBy === 'newest' && searchIds) {
+            finalComics = searchIds
+                .map((id) => comics.find((p) => p.id === id))
+                .filter(Boolean);
+        }
 
-        const sorted = ids
-            .map((id) => products.find((p) => p.id === id))
-            .filter(Boolean);
-
-        return res.json({ results: sorted });
+        return res.status(200).json({
+            success: true,
+            message: 'Tìm kiếm truyện thành công',
+            data: finalComics,
+            meta: {
+                current_page: page,
+                items_per_page: limit,
+                total_items: totalItems,
+                total_pages: Math.ceil(totalItems / limit)
+            }
+        });
     } catch (err) {
         console.error(err);
         return res.status(500).json({ error: 'Search failed' });
     }
+};
+
+exports.upsertProducts = async (req, res) => {
+    try {
+        const products = await db('comics').select('*');
+
+        if (products.length === 0) {
+            return res.status(404).json({ error: 'No products found' });
+        }
+
+        await upsertComicData(products);
+        return res.json({ message: `✅ Upserted ${products.length} products to Pinecone` });
+    } catch (err) {
+        console.error('❌ Upsert error details:', err);
+        return res.status(500).json({ error: err.message });
+    }
+};
+
+exports.updateComic = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const updatedComic = await comicService.updateComic(id, req.body);
+
+        // Real-time: Notify all clients that a comic has been updated
+        try {
+            io.getIO().emit('COMIC_UPDATED', updatedComic);
+        } catch (socketErr) {
+            console.error('Socket emission failed:', socketErr);
+        }
+
+        res.status(200).json({ success: true, message: 'Updated successfully', data: updatedComic });
+    } catch (error) { next(error); }
+};
+
+exports.deleteComic = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await comicService.deleteComic(id);
+
+        // Real-time: Notify all clients that a comic has been deleted
+        try {
+            // Using parseInt to ensure the ID is consistent (number vs string)
+            io.getIO().emit('COMIC_DELETED', parseInt(id, 10));
+        } catch (socketErr) {
+            console.error('Socket emission failed:', socketErr);
+        }
+
+        res.status(200).json({ success: true, message: 'Deleted successfully' });
+    } catch (error) { next(error); }
 };

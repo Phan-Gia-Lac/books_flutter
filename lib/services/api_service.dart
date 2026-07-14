@@ -405,6 +405,7 @@ class ApiService {
   required int categoryId,
   required int authorId,
   required String token,
+  String? coverImage, // Added coverImage
 }) async {
   final response = await http.post(
     Uri.parse('$baseUrl/comics'),
@@ -418,6 +419,7 @@ class ApiService {
       'description': description.trim(),
       'category_id': categoryId,
       'author_id': authorId,
+      'cover_image': coverImage?.trim(), // Added cover_image
     }),
   );
 
@@ -438,6 +440,7 @@ Future<Book> updateComic({
   required double price,
   required String description,
   required String token,
+  String? coverImage, // Added coverImage
 }) async {
   final response = await http.put(
     Uri.parse('$baseUrl/comics/$id'),
@@ -449,6 +452,7 @@ Future<Book> updateComic({
       'title': title.trim(),
       'price': price,
       'description': description.trim(),
+      'cover_image': coverImage?.trim(), // Added cover_image
     }),
   );
 
@@ -484,7 +488,8 @@ Future<void> deleteComic({
 
 Future<List<dynamic>> fetchPendingOrders(String token) async {
   final response = await http.get(
-    Uri.parse('$baseUrl/orders?status=pending'),
+    // Uri.parse('$baseUrl/orders?status=pending),
+    Uri.parse('$baseUrl/orders'),
     headers: {'Authorization': 'Bearer $token'},
   );
 
@@ -504,8 +509,15 @@ Future<void> approveOrder({
   required String token,
 }) async {
   final response = await http.patch(
-    Uri.parse('$baseUrl/orders/$orderId/approve'),
-    headers: {'Authorization': 'Bearer $token'},
+    //Uri.parse('$baseUrl/orders/$orderId/approve'),
+    //headers: {'Authorization': 'Bearer $token'}
+
+    Uri.parse('$baseUrl/orders/$orderId/status'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode({'status': 'processing'}),
   );
 
   if (response.statusCode == 200) {

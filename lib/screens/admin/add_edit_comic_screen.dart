@@ -143,6 +143,9 @@ class _AddEditComicScreenState extends State<AddEditComicScreen> {
   // ── UI Pieces ──────────────────────────────────────────────
 
   Widget _buildCoverPreview() {
+    final imageUrl = _coverImageController.text.trim();
+    final isNetwork = imageUrl.startsWith('http') || imageUrl.startsWith('https');
+
     return Center(
       child: Container(
         width: 140,
@@ -154,14 +157,36 @@ class _AddEditComicScreenState extends State<AddEditComicScreen> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: _coverImageController.text.isNotEmpty
-              ? Image.asset(
-                  _coverImageController.text,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => const Center(
-                    child: Icon(Icons.book_rounded, color: Colors.white38, size: 48),
-                  ),
-                )
+          child: imageUrl.isNotEmpty
+              ? (isNetwork
+                  ? Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(Icons.broken_image_rounded, color: Colors.white38, size: 48),
+                      ),
+                    )
+                  : Image.asset(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(Icons.book_rounded, color: Colors.white38, size: 48),
+                      ),
+                    ))
+              /* 
+              // OLD CODE: Only supported assets
+              : _coverImageController.text.isNotEmpty
+                  ? Image.asset(
+                      _coverImageController.text,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(Icons.book_rounded, color: Colors.white38, size: 48),
+                      ),
+                    )
+                  : const Center(
+                      child: Icon(Icons.book_rounded, color: Colors.white38, size: 48),
+                    ),
+              */
               : const Center(
                   child: Icon(Icons.book_rounded, color: Colors.white38, size: 48),
                 ),
@@ -333,6 +358,27 @@ class _AddEditComicScreenState extends State<AddEditComicScreen> {
             price: double.parse(_priceController.text),
             description: _descriptionController.text.trim(),
             token: token,
+            coverImage: _coverImageController.text.trim(), // Added coverImage
+          )
+        : await adminVM.addBook(
+            title: _titleController.text.trim(),
+            price: double.parse(_priceController.text),
+            description: _descriptionController.text.trim(),
+            categoryId: _selectedCategoryId!,
+            authorId: _selectedAuthorId!,
+            token: token,
+            coverImage: _coverImageController.text.trim(), // Added coverImage
+          );
+    
+    /*
+    // OLD CODE: coverImage was missing
+    final success = _isEditMode
+        ? await adminVM.updateBook(
+            id: widget.book!.id,
+            title: _titleController.text.trim(),
+            price: double.parse(_priceController.text),
+            description: _descriptionController.text.trim(),
+            token: token,
           )
         : await adminVM.addBook(
             title: _titleController.text.trim(),
@@ -342,6 +388,7 @@ class _AddEditComicScreenState extends State<AddEditComicScreen> {
             authorId: _selectedAuthorId!,
             token: token,
           );
+    */
 
     if (!mounted) return;
     setState(() => _isSubmitting = false);

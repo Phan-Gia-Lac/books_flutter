@@ -14,7 +14,7 @@ router.get('/me', auth, orderController.getMyOrders);
 // [STAFF & ADMIN] Cập nhật trạng thái đơn (duyệt, giao hàng, hoàn thành...)
 router.patch('/:id/status', auth, role(['STAFF', 'ADMIN']), orderController.updateOrderStatus);
 
-// [STAFF & ADMIN] Lấy danh sách toàn bộ đơn hàng của hệ thống (Bạn có thể thêm sau)
-// router.get('/', auth, role(['STAFF', 'ADMIN']), orderController.getAllOrders);
+// [STAFF & ADMIN] Lấy danh sách toàn bộ đơn hàng của hệ thống
+router.get('/', auth, role(['STAFF', 'ADMIN']), orderController.getAllOrders);
 
 module.exports = router;
