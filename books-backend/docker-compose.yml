@@ -24,6 +24,8 @@ services:
     restart: always
     ports:
       - "${PORT:-3000}:3000"
+    env_file:
+      - .env
     environment:
       DB_HOST: postgres_db
       DB_PORT: 5432
@@ -32,6 +34,8 @@ services:
       DB_NAME: ${DB_NAME:-comic_shop}
       PORT: 3000
       NODE_ENV: development
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASS: ${EMAIL_PASS}
       PINECONE_API_KEY: ${PINECONE_API_KEY:-}
     depends_on:
       postgres_db:
