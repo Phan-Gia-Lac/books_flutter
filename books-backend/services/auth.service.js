@@ -72,11 +72,8 @@ exports.authenticateUser = async (email, password) => {
     });
 
     // 6. Gửi email
+    // DEV MODE: hardcoded the email "phanphuongphi@gmail.com"
     await mailer.sendOTP(user.email, otpCode);
-    // await mailer.sendOTP(user.email, otpCode);
-    // [DEV MODE]: Bắt buộc gửi tất cả OTP về email thật của bạn (phanphuongphi@gmail.com) 
-    // thay vì gửi vào các email giả (như an.nguyen@gmail.com) để bạn dễ test mọi tài khoản.
-    // const testEmail = "phanphuongphi@gmail.com"; // có thể thay đổi testEmail khác khi debug  
 
     // Vẫn trả về email ảo cho Frontend để Frontend biết đang đăng nhập tài khoản nào
     return { requires2FA: true, email: user.email, role: user.role };
