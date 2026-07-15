@@ -61,7 +61,6 @@ class _ComicoAppState extends State<ComicoApp> {
         // ChangeNotifierProvider(create: (_) => AuthVM()),
         // ChangeNotifierProvider(create: (_) => ProductsVM()),
         // ChangeNotifierProvider(create: (_) => AdminVM()),
-
         ChangeNotifierProvider.value(value: _authVM),
         ChangeNotifierProvider.value(value: _productsVM),
         ChangeNotifierProvider.value(value: _adminVM),
@@ -74,7 +73,7 @@ class _ComicoAppState extends State<ComicoApp> {
         theme: AppTheme.dark,
 
         // Initial screen
-        initialRoute: AppRoutes.admin,
+        initialRoute: AppRoutes.intro,
 
         // All app routes in one place
         routes: {

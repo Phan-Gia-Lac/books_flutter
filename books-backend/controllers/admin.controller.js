@@ -54,6 +54,14 @@ exports.approveOrder = async (req, res, next) => {
 
         const updatedOrder = await orderService.changeOrderStatus(id, status, staffId);
 
+        // Real-time: Notify the Customer that their order status has changed
+        try {
+            const io = require('../socket');
+            io.getIO().emit('ORDER_STATUS_UPDATED', updatedOrder);
+        } catch (socketErr) {
+            console.error('Socket emission failed (ORDER_STATUS_UPDATED):', socketErr);
+        }
+
         res.status(200).json({
             success: true,
             message: `Cập nhật trạng thái đơn hàng thành '${status}' thành công`,
