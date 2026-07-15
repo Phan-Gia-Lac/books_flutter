@@ -486,7 +486,9 @@ Future<void> deleteComic({
   );
 }
 
-Future<List<dynamic>> fetchPendingOrders(String token) async {
+// Future<List<dynamic>> fetchPendingOrders(String token) async
+
+Future<List<dynamic>> fetchAllOrders(String token) async {
   final response = await http.get(
     // Uri.parse('$baseUrl/orders?status=pending),
     Uri.parse('$baseUrl/orders'),
@@ -500,12 +502,28 @@ Future<List<dynamic>> fetchPendingOrders(String token) async {
   }
 
   throw ApiException(
-    body['message'] as String? ?? 'Failed to load pending orders (${response.statusCode})',
+    body['message'] as String? ?? 'Failed to load orders (${response.statusCode})',
   );
 }
 
-Future<void> approveOrder({
+/* 
+// OLD METHOD: Only fetched pending orders
+Future<List<dynamic>> fetchPendingOrders(String token) async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/orders'),
+    headers: {'Authorization': 'Bearer $token'},
+  );
+  final Map<String, dynamic> body = jsonDecode(response.body);
+  if (response.statusCode == 200) {
+    return body['data'] as List<dynamic>;
+  }
+  throw ApiException(body['message'] as String? ?? 'Failed to load pending orders');
+}
+*/
+
+Future<void> updateOrderStatus({
   required int orderId,
+  required String status,
   required String token,
 }) async {
   final response = await http.patch(
@@ -517,7 +535,7 @@ Future<void> approveOrder({
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
     },
-    body: jsonEncode({'status': 'processing'}),
+    body: jsonEncode({'status': status}),
   );
 
   if (response.statusCode == 200) {
@@ -526,7 +544,27 @@ Future<void> approveOrder({
 
   final Map<String, dynamic> body = jsonDecode(response.body);
   throw ApiException(
-    body['message'] as String? ?? 'Failed to approve order (${response.statusCode})',
+    body['message'] as String? ?? 'Failed to update order status (${response.statusCode})',
   );
 }
+
+/*
+// OLD METHOD: Only handled 'processing' status
+Future<void> approveOrder({
+  required int orderId,
+  required String token,
+}) async {
+  final response = await http.patch(
+    Uri.parse('$baseUrl/orders/$orderId/status'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode({'status': 'processing'}),
+  );
+  if (response.statusCode == 200) return;
+  final Map<String, dynamic> body = jsonDecode(response.body);
+  throw ApiException(body['message'] as String? ?? 'Failed to approve order');
+}
+*/
 }
