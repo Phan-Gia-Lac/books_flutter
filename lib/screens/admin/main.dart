@@ -37,8 +37,8 @@ class AdminHomeScreen extends StatelessWidget {
             ),
             _buildMenuCard(
               context,
-              icon: Icons.pending_actions_rounded,
-              label: 'Pending',
+              icon: Icons.assignment_rounded,
+              label: 'Orders',
               onTap: () {
                 Navigator.push(
                   context,
