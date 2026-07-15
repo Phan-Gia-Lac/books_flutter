@@ -8,13 +8,17 @@ class AdminVM extends ChangeNotifier {
   final ApiService _api = ApiService();
 
   List<Book> _books = [];
-  List<dynamic> _pendingOrders = [];
+  // List<dynamic> _pendingOrders = [];
+  List<dynamic> _orders = [];
 
   bool _isLoading = false;
   String? _error;
 
   List<Book> get books => _books;
-  List<dynamic> get pendingOrders => _pendingOrders;
+  // List<dynamic> get pendingOrders => _pendingOrders;
+  List<dynamic> get orders => _orders;
+  List<dynamic> get pendingOrders => _orders.where((o) => o['status'] == 'pending').toList();
+  List<dynamic> get processingOrders => _orders.where((o) => o['status'] == 'processing').toList();
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -139,15 +143,15 @@ class AdminVM extends ChangeNotifier {
     }
   }
 
-  // ── Orders: fetch pending / approve ─────────────────────────────────────
+  // ── Orders: fetch / update status ─────────────────────────────────────
 
-  Future<void> fetchPendingOrders(String token) async {
+  Future<void> fetchOrders(String token) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _pendingOrders = await _api.fetchPendingOrders(token);
+      _orders = await _api.fetchAllOrders(token);
     } on ApiException catch (e) {
       _error = e.message;
     } catch (e) {
@@ -158,7 +162,63 @@ class AdminVM extends ChangeNotifier {
     }
   }
 
+  // Alias for backward compatibility
+  Future<void> fetchPendingOrders(String token) => fetchOrders(token);
+
+  /*
+  // OLD METHOD: Only handled pending orders list
+  Future<void> fetchPendingOrdersOld(String token) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      _pendingOrders = await _api.fetchPendingOrders(token);
+    } on ApiException catch (e) {
+      _error = e.message;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+  */
+
+  Future<bool> updateOrderStatus(int orderId, String status, String token) async {
+    _error = null;
+    try {
+      await _api.updateOrderStatus(orderId: orderId, status: status, token: token);
+      
+      // Update local state
+      final index = _orders.indexWhere((o) => o['id'] == orderId);
+      if (index != -1) {
+        // Create a new map to avoid potential issues with unmodifiable maps
+        final updatedOrder = Map<String, dynamic>.from(_orders[index]);
+        updatedOrder['status'] = status;
+        _orders[index] = updatedOrder;
+        notifyListeners();
+      }
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Failed to update order status. Please try again.';
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> approveOrder(int orderId, String token) async {
+    return updateOrderStatus(orderId, 'processing', token);
+  }
+
+  Future<bool> completeOrder(int orderId, String token) async {
+    return updateOrderStatus(orderId, 'completed', token);
+  }
+
+  /*
+  // OLD METHOD: Hardcoded 'processing' status
+  Future<bool> approveOrderOld(int orderId, String token) async {
     _error = null;
     try {
       await _api.approveOrder(orderId: orderId, token: token);
@@ -169,12 +229,9 @@ class AdminVM extends ChangeNotifier {
       _error = e.message;
       notifyListeners();
       return false;
-    } catch (e) {
-      _error = 'Failed to approve order. Please try again.';
-      notifyListeners();
-      return false;
     }
   }
+  */
 
   // ── Real-time Handlers ───────────────────────────────────────────────────
 
@@ -198,15 +255,25 @@ class AdminVM extends ChangeNotifier {
 
   void onOrderCreated(dynamic order) {
     // Only add to pending if the status is actually pending
-    if (order['status'] == 'pending') {
-      _pendingOrders.insert(0, order);
-      notifyListeners();
-    }
+    // if (order['status'] == 'pending') {
+    //   _pendingOrders.insert(0, order);
+    //   notifyListeners();
+    // }
+
+    _orders.insert(0, order);
+    notifyListeners();
   }
 
   void onOrderStatusUpdated(dynamic order) {
     // If it's no longer pending, remove it from the admin's pending list
-    _pendingOrders.removeWhere((o) => o['id'] == order['id']);
+    // _pendingOrders.removeWhere((o) => o['id'] == order['id'])
+
+    final index = _orders.indexWhere((o) => o['id'] == order['id']);
+    if (index != -1) {
+      _orders[index] = order;
+    } else {
+      _orders.insert(0, order);
+    }
     notifyListeners();
   }
 }
