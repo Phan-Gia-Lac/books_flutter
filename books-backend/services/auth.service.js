@@ -8,6 +8,10 @@ const mailer = require('../mailer');
 // Biến lưu trữ OTP tạm thời trên RAM: email -> { otp, expiresAt, user }
 const otpCache = new Map();
 
+// Cache lưu trữ người dùng đã đăng nhập và xác thực thành công (để bỏ qua OTP cho lần sau)
+// email -> user
+const verifiedUsersCache = new Map();
+
 exports.registerCustomer = async (userData) => {
     // 1. Kiểm tra email đã tồn tại chưa
     const existingUser = await userModel.findByEmail(userData.email);
@@ -61,7 +65,16 @@ exports.authenticateUser = async (email, password) => {
         return { requires2FA: false, user, accessToken };
     }
 
-    // 4. Tạo mã OTP ngẫu nhiên 6 chữ số
+    // 4. Nếu người dùng đã từng đăng nhập và xác thực OTP thành công (có trong cache)
+    if (verifiedUsersCache.has(user.email)) {
+        const payload = { id: user.id, role: user.role };
+        const accessToken = jwt.sign(payload, env.jwt.secret_key, {
+            expiresIn: env.jwt.expires_in,
+        });
+        return { requires2FA: false, user, accessToken };
+    }
+
+    // 5. Tạo mã OTP ngẫu nhiên 6 chữ số
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     // 5. Lưu vào bộ nhớ tạm (hết hạn sau 5 phút)
@@ -113,6 +126,9 @@ exports.verifyOTPAndLogin = async (email, otpCode) => {
 
     // Xóa cache vì đã sử dụng xong
     otpCache.delete(email);
+
+    // Lưu người dùng vào cache đã xác thực để lần sau không cần OTP
+    verifiedUsersCache.set(email, user);
 
     return { user, accessToken };
 };
