@@ -31,14 +31,21 @@ exports.login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
-        // const { user, accessToken } = await authService.authenticateUser(email, password);
-        // Service sẽ kiểm tra mật khẩu, tạo OTP và gửi email
         const result = await authService.authenticateUser(email, password);
 
+        if (result.requires2FA) {
+            return res.status(200).json({
+                success: true,
+                message: 'Vui lòng kiểm tra email để lấy mã OTP',
+                data: result
+            });
+        }
+
+        // Trường hợp không cần OTP (đã cache hoặc là ADMIN)
         res.status(200).json({
             success: true,
-            message: 'Vui lòng kiểm tra email để lấy mã OTP',
-            data: result // { requires2FA: true, email: '...' }
+            message: 'Đăng nhập thành công',
+            data: result // { requires2FA: false, user, accessToken }
         });
     } catch (error) {
         next(error);
