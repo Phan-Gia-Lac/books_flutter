@@ -5,7 +5,7 @@ dotenv.config();
 
 const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
 
-const indexName = 'comic-search';
+const indexName = 'search-comic';
 const MODEL = 'llama-text-embed-v2';
 
 function normalizeText(value, fallback = '') {
@@ -49,7 +49,7 @@ async function searchComics(queryText) {
     const results = await index.searchRecords({
         query: {
             inputs: { text: queryText },
-            topK: 50,
+            topK: 10,
         },
         fields: ['title', 'description'],
     });
